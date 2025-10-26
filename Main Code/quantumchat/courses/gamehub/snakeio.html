@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>✦ Twisted Serpents ✦</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        :root{
+            --bg-dark: linear-gradient(120deg,#141e30,#243b55);
+            --accent-gradient: linear-gradient(270deg,#34c759,#007aff,#ff2d55);
+            --muted: rgba(255,255,255,0.7);
+            --card-bg: rgba(255,255,255,0.04);
+            --glass: rgba(255,255,255,0.06);
+            --radius: 18px;
+        }
+        html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+        body{display:flex;align-items:flex-start;justify-content:center;padding:28px;background:var(--bg-dark);color:white;min-height:100vh;}
+        @keyframes gradientShift { 0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        header h1{font-size:2.4rem;margin:0 0 12px;background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);background-size:800% 800%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation: gradientShift 12s ease infinite;text-align:center;}
+        .container{width:100%;max-width:1200px;}
+        .hstack{display:flex;gap:18px;}
+        .left-panel{width:320px;background:var(--glass);border-radius:16px;padding:18px;backdrop-filter: blur(10px);box-shadow: 0 12px 40px rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.03);}
+        .left-panel h2{margin:0 0 12px;font-size:18px;font-weight:700;background:var(--accent-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:600% 600%;animation:gradientShift 11s linear infinite;}
+        .control-btn{display:block;width:100%;padding:10px 14px;border-radius:14px;border:none;color:white;background:var(--accent-gradient);background-size:500% 500%;animation:gradientShift 10s ease infinite;font-weight:600;cursor:pointer;margin-bottom:10px;box-shadow:0 6px 18px rgba(0,0,0,0.25);}
+        .small-btn{display:inline-block;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;cursor:pointer;}
+        .hint{font-size:13px;color:var(--muted);margin-bottom:6px;}
+        .center-card{flex:1;padding:18px;border-radius:20px;background:var(--card-bg);backdrop-filter: blur(10px);box-shadow:0 18px 60px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:12px;border:1px solid rgba(255,255,255,0.03);position:relative;overflow:hidden;}
+        .canvas-wrap{flex:1;display:flex;align-items:center;justify-content:center;position:relative;}
+        #gameCanvas{background:linear-gradient(180deg,#09203f,#1e3c72);border-radius:12px;box-shadow:0 10px 40px rgba(0,0,0,0.6);display:block;}
+        .status-bar{display:flex;justify-content:space-between;align-items:center;}
+        .leaderboard{width:100%;max-width:300px;background:rgba(255,255,255,0.03);padding:12px;border-radius:12px;}
+        .leaderboard h3{margin:0 0 6px;font-size:1rem;background:linear-gradient(270deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+        .row{display:flex;justify-content:space-between;align-items:center;}
+        .small{font-size:13px;color:var(--muted);}
+        .controls-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;}
+        .badge{padding:6px 10px;border-radius:999px;background:rgba(255,255,255,0.04);font-weight:700;}
+        .settings{margin-top:12px;background:rgba(255,255,255,0.02);padding:10px;border-radius:12px;}
+        .footer{font-size:12px;color:var(--muted);text-align:center;margin-top:8px;}
+        /* HUD */
+        .hud{position:absolute;left:18px;top:18px;background:rgba(0,0,0,0.28);padding:10px;border-radius:12px;backdrop-filter: blur(4px);}
+        .hud .stat{font-weight:700;margin-bottom:6px;}
+        /* touch joystick */
+        #touchPad{position:absolute;right:18px;bottom:18px;width:140px;height:140px;border-radius:999px;background:rgba(255,255,255,0.03);display:none;align-items:center;justify-content:center;}
+        #touchInner{width:64px;height:64px;border-radius:999px;background:rgba(255,255,255,0.06);transform:translate(0,0);touch-action:none;}
+        @media (max-width:900px){
+            .hstack{flex-direction:column;}
+            .left-panel{width:100%;}
+            #touchPad{display:flex;}
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
+        <h1>✦ Twisted Serpents ✦</h1>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <button id="btnPause" class="small-btn">Pause</button>
+            <button id="btnRestart" class="small-btn">Restart</button>
+            <button id="btnSound" class="small-btn">🔊 On</button>
+        </div>
+    </header>
+
+    <div class="hstack">
+        <aside class="left-panel">
+            <h2>Game Control</h2>
+            <div class="left-section">
+                <button id="btnStart" class="control-btn">Start Game</button>
+                <div class="hint">Mode & Difficulty</div>
+                <div class="controls-grid">
+                    <div>
+                        <label class="small">AI Count</label>
+                        <select id="selAI">
+                            <option value="3">3</option>
+                            <option value="4">4</option>
+                            <option value="5">5</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="small">Difficulty</label>
+                        <select id="selDiff">
+                            <option value="easy">Easy</option>
+                            <option value="normal" selected>Normal</option>
+                            <option value="hard">Hard</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <div class="hint">Player Settings</div>
+                    <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px;">
+                        <label class="small">Skin</label>
+                        <select id="selSkin">
+                            <option value="neon">Neon</option>
+                            <option value="fire">Fire</option>
+                            <option value="ice">Ice</option>
+                            <option value="shadow">Shadow</option>
+                        </select>
+                    </div>
+                    <div class="hint">Controls: Arrow keys / WASD. On touch, use joystick.</div>
+                </div>
+
+                <div class="settings">
+                    <div class="hint">Game Rules (twisted):</div>
+                    <ul style="margin:6px 0 0 18px;color:var(--muted);">
+                        <li>Grow by eating food and enemy bits.</li>
+                        <li>Big food splits into many bits.</li>
+                        <li>Power-ups: Speed, Magnet, Poison (ouch).</li>
+                        <li>Bigger snake wins head-on collisions.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="margin-top:12px;">
+                <div class="hint">Leaderboard</div>
+                <div class="leaderboard" id="leaderboard">
+                    <h3>Top Snakes</h3>
+                    <div id="lbList"><div class="small">No data yet</div></div>
+                </div>
+            </div>
+
+            <div style="margin-top:12px;">
+                <div class="hint">Quick Tips</div>
+                <div class="small">Try flanking AI or lure smaller snakes into your tail. Use power-ups strategically.</div>
+            </div>
+            <div class="footer">Made with ♡ — twisted variant</div>
+        </aside>
+
+        <section class="center-card">
+            <div class="status-bar">
+                <div id="scoreBadge" class="badge">Score: 0</div>
+                <div class="small">Length: <span id="lenBadge">1</span> | Speed: <span id="speedBadge">1.0×</span></div>
+            </div>
+
+            <div class="canvas-wrap" style="flex:1;position:relative;">
+                <canvas id="gameCanvas" width="960" height="640"></canvas>
+                <div class="hud" id="hud">
+                    <div class="stat" id="statMode">Mode: Idle</div>
+                    <div class="small" id="statInfo">Collect food • Avoid collisions</div>
+                </div>
+                <div id="touchPad"><div id="touchInner"></div></div>
+            </div>
+
+        </section>
+    </div>
+</div>
+
+<script>
+    /* =========================================================
+       Snake.io — Twisted Serpents
+       Single-file browser game. No external libs.
+       ========================================================= */
+
+    /* --------- Utilities --------- */
+    const rand = (a,b)=> a + Math.random()*(b-a);
+    const randInt = (a,b)=> Math.floor(rand(a,b+1));
+    const clamp = (v,a,b)=> Math.max(a, Math.min(b,v));
+    const dist = (a,b)=> Math.hypot(a.x-b.x, a.y-b.y);
+    const now = ()=> performance.now();
+
+    /* --------- Canvas Setup --------- */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    let DPR = Math.max(1, window.devicePixelRatio || 1);
+
+    function resizeCanvas(){
+        const rect = canvas.getBoundingClientRect();
+        const w = rect.width || 960, h = rect.height || 640;
+        canvas.width = Math.floor(w * DPR);
+        canvas.height = Math.floor(h * DPR);
+        ctx.setTransform(DPR,0,0,DPR,0,0);
+    }
+    window.addEventListener('resize', resizeCanvas);
+    (function initCanvasSize(){
+        // set CSS size
+        canvas.style.width = '960px';
+        canvas.style.height = '640px';
+        resizeCanvas();
+    })();
+
+    /* --------- Game Config & State --------- */
+    const cfg = {
+        fieldW: 960,
+        fieldH: 640,
+        foodCount: 40,
+        maxAIs: 6,
+        baseSpeed: 120, // px/sec
+        turnSpeed: 6.0, // radians/sec
+    };
+    let game = {
+        running: false,
+        lastTime: 0,
+        player: null,
+        snakes: [], // includes player and AIs
+        foods: [],
+        particles: [],
+        powerUps: [],
+        score: 0,
+        leaderboard: [],
+        mode: 'idle',
+        soundOn: true
+    };
+
+    /* --------- Audio (simple synth) --------- */
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    function ensureAudio(){
+        if(!audioCtx) audioCtx = new AudioCtx();
+    }
+    function playBeep(freq=880, time=0.08, type='sine', gain=0.08){
+        if(!game.soundOn) return;
+        ensureAudio();
+        const o = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        o.type = type;
+        o.frequency.value = freq;
+        g.gain.value = gain;
+        o.connect(g);
+        g.connect(audioCtx.destination);
+        o.start();
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + time);
+        o.stop(audioCtx.currentTime + time + 0.02);
+    }
+
+    /* --------- Entity Models --------- */
+    function createFood(x,y, size=1, type='food'){
+        return { id: 'f'+Math.random().toString(36).slice(2), x, y, r: 4*size, size, type, wobble: Math.random()*Math.PI*2 };
+    }
+    function createPowerup(x,y, subtype='speed'){
+        return { id:'p'+Math.random().toString(36).slice(2), x,y, r:12, subtype, born:now() };
+    }
+    function makeSnake(opts){
+        const id = opts.id || ('s'+Math.random().toString(36).slice(2));
+        const color = opts.color || randomSkinColor(opts.skin || 'neon');
+        return {
+            id,
+            name: opts.name || id,
+            skin: opts.skin || 'neon',
+            color,
+            segments: [{x: opts.x, y: opts.y}],
+            dir: opts.dir || 0,
+            speed: opts.speed || cfg.baseSpeed * (opts.speedMult || 1),
+            turnSpeed: opts.turnSpeed || cfg.turnSpeed,
+            targetDir: opts.dir || 0,
+            alive: true,
+            controlled: !!opts.controlled,
+            aiType: opts.aiType || null,
+            length: opts.length || 6, // desired length (segments)
+            grow: 0,
+            lastGrowAt: now(),
+            score: 0,
+            idColor: Math.floor(Math.random()*360)
+        };
+    }
+
+    /* Skins: returns color function or gradient-like specification */
+    function randomSkinColor(name){
+        if(name==='neon') return {type:'linear', stops:['#43e97b','#38f9d7']};
+        if(name==='fire') return {type:'linear', stops:['#ff7e5f','#feb47b']};
+        if(name==='ice') return {type:'linear', stops:['#8ed0f7','#bfe9ff']};
+        if(name==='shadow') return {type:'solid', stops:['#9aa0ff']};
+        return {type:'linear', stops:['#fff','#ddd']};
+    }
+    function paintSnakeSegment(ctx, skin, x, y, r, i, total){
+        if(skin.type === 'solid'){
+            ctx.fillStyle = skin.stops[0];
+        } else {
+            // radial gradient per segment for shimmer
+            const g = ctx.createLinearGradient(x-r,y-r,x+r,y+r);
+            const s = skin.stops;
+            for(let k=0;k<s.length;k++){
+                g.addColorStop(k/(s.length-1), s[k]);
+            }
+            ctx.fillStyle = g;
+        }
+        ctx.beginPath();
+        ctx.arc(x,y,r,0,Math.PI*2);
+        ctx.fill();
+
+        // subtle highlight
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.arc(x - r*0.25, y - r*0.35, r*0.6, 0, Math.PI*2);
+        ctx.fill();
+    }
+
+    /* --------- Game Mechanics --------- */
+    function spawnFoods(n=1){
+        for(let i=0;i<n;i++){
+            const x = rand(30, cfg.fieldW-30);
+            const y = rand(30, cfg.fieldH-30);
+            const big = Math.random()<0.06;
+            if(big){
+                game.foods.push(createFood(x,y, randInt(3,6), 'big'));
+            } else {
+                game.foods.push(createFood(x,y,1,'food'));
+            }
+        }
+    }
+    function spawnPowerup(){
+        if(Math.random() < 0.02){
+            const types = ['speed','magnet','poison'];
+            const t = types[randInt(0,types.length-1)];
+            game.powerUps.push(createPowerup(rand(40,cfg.fieldW-40), rand(40,cfg.fieldH-40), t));
+        }
+    }
+
+    /* Player control */
+    const keys = {};
+    window.addEventListener('keydown', e=>{ keys[e.key.toLowerCase()] = true; });
+    window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
+
+    /* Touch joystick */
+    const touchPad = document.getElementById('touchPad');
+    const touchInner = document.getElementById('touchInner');
+    let touchId = null, touchCenter = null;
+    touchPad.addEventListener('pointerdown', e=>{
+        touchPad.setPointerCapture(e.pointerId);
+        touchId = e.pointerId;
+        const r = touchPad.getBoundingClientRect();
+        touchCenter = {x: r.left + r.width/2, y: r.top + r.height/2};
+        updateTouch(e.clientX, e.clientY);
+    });
+    touchPad.addEventListener('pointermove', e => { if(e.pointerId===touchId) updateTouch(e.clientX, e.clientY); });
+    touchPad.addEventListener('pointerup', e => { if(e.pointerId===touchId){ touchId=null; touchInner.style.transform='translate(0,0)'; } });
+
+    function updateTouch(cx, cy){
+        const dx = cx - touchCenter.x, dy = cy - touchCenter.y;
+        const max = 44;
+        const nx = clamp(dx, -max, max), ny = clamp(dy, -max, max);
+        touchInner.style.transform = `translate(${nx}px, ${ny}px)`;
+        const angle = Math.atan2(ny, nx);
+        // apply to player targetDir
+        if(game.player && game.player.alive){
+            game.player.targetDir = angle;
+        }
+    }
+
+    /* ---------- Initialize new game ---------- */
+    function newGame(){
+        // read settings
+        const aiCount = parseInt(document.getElementById('selAI').value || '3',10);
+        const diff = document.getElementById('selDiff').value || 'normal';
+        const skin = document.getElementById('selSkin').value || 'neon';
+
+        // reset world
+        game.snakes = [];
+        game.foods = [];
+        game.powerUps = [];
+        game.particles = [];
+        game.score = 0;
+        game.mode = 'running';
+        document.getElementById('statMode').textContent = 'Mode: Live';
+        spawnFoods(cfg.foodCount);
+
+        // player in center
+        game.player = makeSnake({ id:'player1', name:'You', x: cfg.fieldW*0.5, y: cfg.fieldH*0.5, dir: -Math.PI/2, skin, controlled:true, length:10, speedMult:1.0});
+        game.snakes.push(game.player);
+
+        // spawn AIs
+        const aiTypes = ['wander','greedy','aggro'];
+        const diffMult = diff === 'easy' ? 0.85 : diff === 'hard' ? 1.15 : 1.0;
+        for(let i=0;i<aiCount;i++){
+            const x = rand(80, cfg.fieldW-80);
+            const y = rand(80, cfg.fieldH-80);
+            const ai = makeSnake({
+                id: 'ai'+i,
+                name: 'AI-'+(i+1),
+                x, y,
+                dir: rand(0, Math.PI*2),
+                skin: ['neon','fire','ice','shadow'][i%4],
+                aiType: aiTypes[i%aiTypes.length],
+                length: randInt(6, 40),
+                speed: cfg.baseSpeed * (0.9 + Math.random()*0.6) * diffMult,
+                turnSpeed: cfg.turnSpeed * (0.8 + Math.random()*0.6)
+            });
+            game.snakes.push(ai);
+        }
+
+        // tune UI
+        document.getElementById('lbList').innerHTML = '';
+        updateHUD();
+        game.running = true;
+        game.lastTime = now();
+        playBeep(660, 0.08, 'sine', 0.06);
+    }
+
+    /* ---------- Physics & Movement ---------- */
+    function step(dt){
+        if(!game.running) return;
+
+        // spawn periodic things
+        if(game.foods.length < cfg.foodCount) spawnFoods(1);
+        if(Math.random() < 0.01) spawnPowerup();
+
+        // handle player input into targetDir
+        if(game.player && game.player.alive){
+            handlePlayerInput(game.player);
+        }
+
+        // update each snake
+        for(const s of game.snakes){
+            if(!s.alive) continue;
+            // AI decisions
+            if(!s.controlled) aiDecide(s, dt);
+
+            // smooth turning: approach targetDir
+            const delta = normalizeAngle(s.targetDir - s.dir);
+            const maxTurn = s.turnSpeed * dt;
+            s.dir += clamp(delta, -maxTurn, maxTurn);
+
+            // move head forward
+            const vx = Math.cos(s.dir) * s.speed * dt;
+            const vy = Math.sin(s.dir) * s.speed * dt;
+            const head = s.segments[0];
+            const newHead = { x: head.x + vx, y: head.y + vy };
+            // wrap edges
+            if(newHead.x < 0) newHead.x += cfg.fieldW;
+            if(newHead.x > cfg.fieldW) newHead.x -= cfg.fieldW;
+            if(newHead.y < 0) newHead.y += cfg.fieldH;
+            if(newHead.y > cfg.fieldH) newHead.y -= cfg.fieldH;
+
+            // add new head at front of segments
+            s.segments.unshift(newHead);
+
+            // trailing: keep segments smooth by trimming
+            while(s.segments.length > s.length + Math.floor(s.grow)) {
+                s.segments.pop();
+            }
+
+            // natural shrink/grow decays
+            if(s.grow > 0) s.grow = Math.max(0, s.grow - dt*0.5);
+
+            // collisions with foods & powerups
+            collectFood(s);
+
+        }
+
+        // collisions among snakes (head vs body and head vs head)
+        handleCollisions();
+
+        // update particles
+        updateParticles(dt);
+
+        // update HUD & leaderboard
+        updateHUD();
+    }
+
+    /* Normalize angle to [-PI,PI] */
+    function normalizeAngle(a){
+        while(a > Math.PI) a -= Math.PI*2;
+        while(a < -Math.PI) a += Math.PI*2;
+        return a;
+    }
+
+    /* Player input mapping */
+    function handlePlayerInput(player){
+        // keyboard control: WASD or arrows
+        const left = keys['arrowleft'] || keys['a'];
+        const right = keys['arrowright'] || keys['d'];
+        const up = keys['arrowup'] || keys['w'];
+        const down = keys['arrowdown'] || keys['s'];
+
+        // prefer joystick (touch) already sets targetDir; if no joystick, compute from keys
+        if(!touchId){
+            if(left) player.targetDir -= player.turnSpeed * (1/60);
+            if(right) player.targetDir += player.turnSpeed * (1/60);
+            if(up && !(left||right)){ /* accelerate forward */ }
+            // If both up+left, fine.
+        }
+    }
+
+    /* AI decision-making (twisted simple behaviors) */
+    function aiDecide(s, dt){
+        // small randomness
+        if(Math.random() < 0.02){
+            s.targetDir += rand(-0.6,0.6)*0.6;
+        }
+
+        // greedy: go toward nearest food
+        if(s.aiType === 'greedy'){
+            const f = nearestFood(s);
+            if(f){
+                s.targetDir = Math.atan2(f.y - s.segments[0].y, f.x - s.segments[0].x);
+            }
+        } else if(s.aiType === 'aggro'){
+            // chase weaker snake head if close, else greedy
+            const targetSnake = nearestWeakerSnake(s);
+            if(targetSnake && Math.random() < 0.9){
+                s.targetDir = Math.atan2(targetSnake.segments[0].y - s.segments[0].y, targetSnake.segments[0].x - s.segments[0].x);
+            } else {
+                const f = nearestFood(s);
+                if(f) s.targetDir = Math.atan2(f.y - s.segments[0].y, f.x - s.segments[0].x);
+            }
+        } else {
+            // wander: steer toward random points occasionally
+            if(!s._wanderTarget || Math.hypot(s._wanderTarget.x - s.segments[0].x, s._wanderTarget.y - s.segments[0].y) < 16){
+                s._wanderTarget = { x: rand(40,cfg.fieldW-40), y: rand(40,cfg.fieldH-40) };
+            }
+            s.targetDir = Math.atan2(s._wanderTarget.y - s.segments[0].y, s._wanderTarget.x - s.segments[0].x);
+        }
+
+        // occasionally use a speed burst to dodge
+        if(s.aiType === 'aggro' && Math.random() < 0.003){
+            s.speed *= 1.3;
+            setTimeout(()=> s.speed /= 1.3, 400 + Math.random()*800);
+        }
+    }
+
+    /* Find nearest food to a snake */
+    function nearestFood(s){
+        let best = null, bd = 1e9;
+        for(const f of game.foods){
+            const d = (f.x - s.segments[0].x)**2 + (f.y - s.segments[0].y)**2;
+            if(d < bd){ bd = d; best = f; }
+        }
+        return best;
+    }
+
+    /* Find a weaker snake near */
+    function nearestWeakerSnake(s){
+        let best = null, bd = 1e9;
+        const myLen = s.length;
+        for(const o of game.snakes){
+            if(o === s || !o.alive) continue;
+            if(o.length >= myLen - 2) continue; // only consider weaker
+            const d = (o.segments[0].x - s.segments[0].x)**2 + (o.segments[0].y - s.segments[0].y)**2;
+            if(d < bd){ bd = d; best = o; }
+        }
+        return best;
+    }
+
+    /* Collect food for a snake */
+    function collectFood(s){
+        const head = s.segments[0];
+        // foods
+        for(let i = game.foods.length-1; i>=0; i--){
+            const f = game.foods[i];
+            const d = Math.hypot(f.x - head.x, f.y - head.y);
+            if(d < f.r + 6 + Math.max(0,s.length/5)){
+                // collect
+                game.foods.splice(i,1);
+                s.length += Math.max(1, Math.floor(f.size));
+                s.grow += f.size*0.5;
+                s.score += Math.floor(f.size*10);
+                spawnParticles(head.x, head.y, f.size*5, f.type==='big' ? '#ffd27f' : '#b9ffb7');
+                playBeep(880 + f.size*30, 0.06, 'sine', 0.04);
+                // big food: split into smaller food
+                if(f.type === 'big'){
+                    const bits = randInt(6, 14);
+                    for(let k=0;k<bits;k++){
+                        game.foods.push(createFood(f.x + rand(-18,18), f.y + rand(-18,18), 1, 'food'));
+                    }
+                }
+            }
+        }
+        // powerups
+        for(let i = game.powerUps.length-1; i>=0; i--){
+            const p = game.powerUps[i];
+            const d = Math.hypot(p.x - head.x, p.y - head.y);
+            if(d < p.r + 8){
+                // apply
+                applyPowerup(s, p.subtype);
+                game.powerUps.splice(i,1);
+                spawnParticles(p.x, p.y, 18, '#ff8af0');
+                playBeep(1200,0.08,'sawtooth',0.06);
+            }
+        }
+    }
+
+    /* Power-up effects */
+    function applyPowerup(s, type){
+        if(type === 'speed'){
+            s.speed *= 1.8;
+            setTimeout(()=> s.speed /= 1.8, 1400);
+        } else if(type === 'magnet'){
+            // attract nearby food
+            const magnetInterval = setInterval(()=> {
+                if(!s.alive) { clearInterval(magnetInterval); return; }
+                for(let i=game.foods.length-1;i>=0;i--){
+                    const f = game.foods[i];
+                    const d = Math.hypot(f.x - s.segments[0].x, f.y - s.segments[0].y);
+                    if(d < 120){
+                        // move food toward snake
+                        f.x += (s.segments[0].x - f.x) * 0.25;
+                        f.y += (s.segments[0].y - f.y) * 0.25;
+                    }
+                }
+            }, 120);
+            setTimeout(()=> clearInterval(magnetInterval), 2500);
+        } else if(type === 'poison'){
+            // shrink gradually
+            const shrink = setInterval(()=>{
+                if(!s.alive) { clearInterval(shrink); return; }
+                s.length = Math.max(2, s.length - 1);
+            }, 220);
+            setTimeout(()=> clearInterval(shrink), 2200);
+        }
+    }
+
+    /* Handle collisions: head vs body and head vs head */
+    function handleCollisions(){
+        // build list of body parts for quick checks
+        const bodies = [];
+        for(const s of game.snakes){
+            if(!s.alive) continue;
+            // skip first 2 segments to avoid immediate self-collision on fast movement
+            for(let i=3;i<s.segments.length;i++){
+                bodies.push({ snake: s, idx: i, x: s.segments[i].x, y: s.segments[i].y, r: Math.max(6, 7 + s.length*0.06) });
+            }
+        }
+
+        // head vs bodies
+        for(const s of game.snakes){
+            if(!s.alive) continue;
+            const head = s.segments[0];
+            const hr = 8 + s.length * 0.06;
+            // check collision with bodies
+            for(const b of bodies){
+                if(b.snake === s) continue;
+                const d = Math.hypot(b.x - head.x, b.y - head.y);
+                if(d < b.r + hr*0.8){
+                    // collision: compare sizes
+                    if(s.length > b.snake.length * 0.8){
+                        // s eats b.snake -> b.snake dies
+                        killSnake(b.snake, s);
+                    } else {
+                        // s dies
+                        killSnake(s, b.snake);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // head vs head (two snakes collide heads)
+        for(let i=0;i<game.snakes.length;i++){
+            for(let j=i+1;j<game.snakes.length;j++){
+                const a = game.snakes[i], b = game.snakes[j];
+                if(!a.alive || !b.alive) continue;
+                const d = Math.hypot(a.segments[0].x - b.segments[0].x, a.segments[0].y - b.segments[0].y);
+                const thr = 12 + Math.max(a.length, b.length)*0.06;
+                if(d < thr){
+                    // bigger length wins (tie: both die)
+                    if(Math.abs(a.length - b.length) < Math.max(2, Math.min(a.length,b.length)*0.08)){
+                        // tie
+                        killSnake(a, b);
+                        killSnake(b, a);
+                    } else if(a.length > b.length){
+                        killSnake(b, a);
+                    } else {
+                        killSnake(a, b);
+                    }
+                }
+            }
+        }
+
+        // self-collision: head hitting own body
+        for(const s of game.snakes){
+            if(!s.alive) continue;
+            for(let i=4;i<s.segments.length;i++){
+                const d = Math.hypot(s.segments[0].x - s.segments[i].x, s.segments[0].y - s.segments[i].y);
+                if(d < 8 + s.length*0.06){
+                    killSnake(s, null);
+                    break;
+                }
+            }
+        }
+    }
+
+    /* Kill snake: convert its mass to food, spawn particles, award killer */
+    function killSnake(victim, killer){
+        if(!victim.alive) return;
+        victim.alive = false;
+        // spawn food bits proportional to length
+        const bits = Math.min(80, Math.floor(victim.length * (1 + Math.random())));
+        for(let i=0;i<bits;i++){
+            game.foods.push(createFood(
+                victim.segments[0].x + rand(-40,40),
+                victim.segments[0].y + rand(-40,40),
+                1, 'food'
+            ));
+        }
+        // spawn particles
+        spawnParticles(victim.segments[0].x, victim.segments[0].y, Math.min(140, bits*2), '#ffb38a');
+
+        // award killer
+        if(killer){
+            killer.length += Math.floor(victim.length * 0.4);
+            killer.score += Math.floor(victim.length * 5);
+        }
+
+        // remove snake segments gradually by marking
+        setTimeout(()=> {
+            // fully remove from world's snake list after a delay
+            // leave corpse for a bit
+            game.snakes = game.snakes.filter(s => s.alive || s === victim && Math.random()<0.001);
+            // add to leaderboard
+            game.leaderboard.unshift({ name: victim.name, score: victim.score + Math.floor(victim.length*2) });
+            if(game.leaderboard.length > 8) game.leaderboard.length = 8;
+        }, 1200);
+
+        playBeep(200 + Math.random()*200, 0.2, 'sawtooth', 0.12);
+    }
+
+    /* Particles */
+    function spawnParticles(x,y,count, color){
+        for(let i=0;i<count;i++){
+            game.particles.push({
+                x, y,
+                vx: rand(-120,120),
+                vy: rand(-120,120),
+                life: rand(0.4,1.4),
+                size: rand(1.4,4.0),
+                color
+            });
+        }
+    }
+    function updateParticles(dt){
+        for(let i=game.particles.length-1;i>=0;i--){
+            const p = game.particles[i];
+            p.life -= dt;
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+            p.vx *= 0.98;
+            p.vy *= 0.98;
+            if(p.life <= 0) game.particles.splice(i,1);
+        }
+    }
+
+    /* ---------- Render ---------- */
+    function render(){
+        // clear
+        ctx.clearRect(0,0, cfg.fieldW, cfg.fieldH);
+
+        // draw background grid subtle
+        const grd = ctx.createLinearGradient(0,0,0,cfg.fieldH);
+        grd.addColorStop(0, 'rgba(0,0,0,0.08)');
+        grd.addColorStop(1, 'rgba(0,0,0,0.12)');
+        ctx.fillStyle = grd;
+        ctx.fillRect(0,0,cfg.fieldW,cfg.fieldH);
+
+        // star-like sparkle background (small)
+        for(let i=0;i<6;i++){
+            ctx.fillStyle = 'rgba(255,255,255,0.01)';
+            ctx.beginPath();
+            const sx = (i*137.5* (1+Math.sin(now()/1000+i))) % cfg.fieldW;
+            const sy = (i*89.3*(1+Math.cos(now()/1200+i))) % cfg.fieldH;
+            ctx.fillRect(sx, sy, 2, 2);
+        }
+
+        // foods
+        for(const f of game.foods){
+            const wob = Math.sin(now()/400 + f.wobble) * 0.5;
+            ctx.beginPath();
+            ctx.fillStyle = f.type==='big' ? '#ffd27f' : '#b9ffb7';
+            ctx.arc(f.x + wob*1.6, f.y + wob*1.6, f.r, 0, Math.PI*2);
+            ctx.fill();
+            // glow
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(255,255,255,0.02)';
+            ctx.arc(f.x, f.y, f.r*1.8, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // powerups
+        for(const p of game.powerUps){
+            ctx.beginPath();
+            ctx.fillStyle = p.subtype === 'speed' ? '#b2f7ff' : p.subtype === 'magnet' ? '#ffc7ff' : '#ffb7b7';
+            ctx.arc(p.x, p.y, p.r, 0, Math.PI*2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.fillStyle = 'rgba(255,255,255,0.06)';
+            ctx.arc(p.x - 3, p.y - 4, p.r*0.6, 0, Math.PI*2);
+            ctx.fill();
+        }
+
+        // particles
+        for(const p of game.particles){
+            ctx.beginPath();
+            ctx.fillStyle = p.color;
+            ctx.globalAlpha = Math.max(0, p.life/1.4);
+            ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+        }
+
+        // snakes: draw bodies behind heads
+        const sorted = game.snakes.slice().sort((a,b)=> (b.length - a.length));
+        for(const s of sorted){
+            if(!s.alive) continue;
+            const total = s.segments.length;
+            for(let i = Math.min(total-1, 120); i >= 0; i--){
+                const seg = s.segments[i];
+                const t = i / Math.max(1, total-1);
+                const r = 6 + Math.sqrt(s.length) * (1.0 - t) + 1;
+                // color fade
+                const skin = randomSkinColor(s.skin);
+                paintSnakeSegment(ctx, skin, seg.x, seg.y, r, i, total);
+            }
+            // head accent
+            const head = s.segments[0];
+            ctx.beginPath();
+            ctx.fillStyle = s.controlled ? 'rgba(255,255,255,0.9)' : 'rgba(0,0,0,0.14)';
+            ctx.arc(head.x + Math.cos(s.dir)*4, head.y + Math.sin(s.dir)*4, 6 + Math.sqrt(s.length)*0.18, 0, Math.PI*2);
+            ctx.fill();
+
+            // name tag
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.fillRect(head.x+10, head.y-26, 80, 18);
+            ctx.fillStyle = '#fff';
+            ctx.font = '12px system-ui, -apple-system';
+            ctx.fillText(s.name, head.x+14, head.y-14);
+        }
+
+        // overlay text
+        ctx.fillStyle = 'rgba(255,255,255,0.06)';
+        ctx.font = '12px system-ui';
+        ctx.fillText('Twisted Serpents — eat, grow, dominate', 12, cfg.fieldH - 12);
+    }
+
+    /* ---------- Loop ---------- */
+    function gameLoop(){
+        if(!game.running){ requestAnimationFrame(gameLoop); return; }
+        const t = now();
+        let dt = (t - (game.lastTime || t))/1000;
+        if(dt > 0.06) dt = 0.06;
+        step(dt);
+        render();
+        game.lastTime = t;
+        requestAnimationFrame(gameLoop);
+    }
+
+    /* ---------- HUD / UI ---------- */
+    function updateHUD(){
+        document.getElementById('scoreBadge').textContent = 'Score: ' + (game.player ? Math.floor(game.player.score) : 0);
+        document.getElementById('lenBadge').textContent = game.player ? Math.floor(game.player.length) : 0;
+        document.getElementById('speedBadge').textContent = game.player ? (game.player.speed / cfg.baseSpeed).toFixed(2) + '×' : '1.0×';
+
+        // leaderboard pane
+        const list = document.getElementById('lbList');
+        if(game.leaderboard.length === 0){
+            list.innerHTML = '<div class="small">No eliminations yet</div>';
+        } else {
+            list.innerHTML = game.leaderboard.slice(0,6).map((it,idx)=>{
+                return `<div class="row"><div>${idx+1}. ${escapeHtml(it.name)}</div><div class="small">${it.score}</div></div>`;
+            }).join('');
+        }
+
+        // HUD text
+        document.getElementById('statInfo').textContent = `Snakes alive: ${game.snakes.filter(s=>s.alive).length} • Food: ${game.foods.length} • Powerups: ${game.powerUps.length}`;
+    }
+
+    /* ---------- Utilities ---------- */
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+    /* ---------- Controls & Buttons ---------- */
+    document.getElementById('btnStart').addEventListener('click', ()=>{
+        newGame();
+        playBeep(980,0.08,'sine',0.05);
+    });
+    document.getElementById('btnRestart').addEventListener('click', ()=>{
+        newGame();
+    });
+    document.getElementById('btnPause').addEventListener('click', (e)=>{
+        game.running = !game.running;
+        e.target.textContent = game.running ? 'Pause' : 'Resume';
+        if(game.running) { game.lastTime = now(); gameLoop(); }
+    });
+    document.getElementById('btnSound').addEventListener('click', (e)=>{
+        game.soundOn = !game.soundOn;
+        e.target.textContent = game.soundOn ? '🔊 On' : '🔈 Off';
+    });
+
+    /* ---------- Spawn initial goodies ---------- */
+    spawnFoods(cfg.foodCount);
+    spawnPowerup();
+
+    /* ---------- Start the animation loop ---------- */
+    game.lastTime = now();
+    gameLoop();
+
+    /* ---------- Collision helper for head vs body uses earlier functions ---------- */
+
+    /* ---------- Simple startup instructions ---------- */
+    document.getElementById('statMode').textContent = 'Mode: Idle — press Start';
+
+    /* ---------- Small visual tweaks on load ---------- */
+    setTimeout(()=> {
+        // center canvas CSS sizing to actual field config
+        canvas.style.width = cfg.fieldW + 'px';
+        canvas.style.height = cfg.fieldH + 'px';
+        resizeCanvas();
+    }, 60);
+
+    /* ---------- Export: for dev debugging ---------- */
+    window._twistedSnake = { game, cfg, newGame };
+
+    /* End of script */
+</script>
+</body>
+</html>

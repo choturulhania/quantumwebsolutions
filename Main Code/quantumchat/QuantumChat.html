@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Quantum Chat</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        /* --- Base / Typography --- */
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        html, body { height: 100%; margin: 0; }
+        body {
+            margin: 0;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+            /* french-lesson dark diagonal gradient */
+            background: linear-gradient(120deg, #141e30, #243b55);
+        }
+
+        /* Animated gradient used for headings */
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        /* --- Page header (added, matches French Lesson style) --- */
+        header {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        header h1 {
+            font-size: 3em;
+            margin: 0;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+        }
+
+        /* --- Layout wrapper keeps sidebar & main as before (no id changes) --- */
+        .app-wrap {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            gap: 20px;
+            align-items: stretch;
+            flex: 1 1 auto;
+        }
+
+        /* --- Sidebar --- */
+        #sidebar{
+            width:260px;
+            background: rgba(255,255,255,0.06); /* glass look on dark background */
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.04);
+            display:flex;
+            flex-direction:column;
+            padding:16px;
+            height: calc(100vh - 140px);
+            overflow: hidden;
+            transition: width 0.3s ease, transform 0.3s ease; /* Added transform for mobile */
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+        }
+
+        #sidebar.collapsed { width: 60px; }
+
+        #sidebarToggle {
+            margin-bottom:12px;
+            cursor:pointer;
+            font-weight:700;
+            color: #e6eefc;
+            user-select: none;
+        }
+
+        /* Chats heading — animated gradient text */
+        #sidebar h2{
+            margin:0 0 8px;
+            font-weight:600;
+            font-size:18px;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff);
+            background-size: 800% 800%;
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation: gradientShift 11s ease infinite;
+        }
+
+        #chatList{ flex:1; overflow-y:auto; margin-top:10px; padding-right:6px; }
+
+        .chat-item{
+            padding:10px 12px;
+            margin-bottom:10px;
+            border-radius:14px;
+            background: transparent;
+            transition: background 0.2s, transform 0.12s;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            justify-content:flex-start;
+        }
+        .chat-item:hover { background: rgba(255,255,255,0.03); transform: translateY(-2px); }
+        .chat-item.active { background: rgba(255,255,255,0.06); box-shadow: inset 0 0 12px rgba(0,0,0,0.2); }
+
+        /* animated gradient text for chat names */
+        .chat-gradient{
+            font-weight:600;
+            background: linear-gradient(270deg,#ff4e50,#f9d423,#1fa2ff);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 11s ease infinite;
+            display:inline-block;
+            transition: transform 0.18s ease;
+        }
+        .chat-item:hover .chat-gradient{ transform: translateX(4px); }
+
+        /* New chat button */
+        #btnNewChat{
+            padding:12px;
+            border:none;
+            border-radius:14px;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color:#fff;
+            font-weight:600;
+            cursor:pointer;
+            transition: transform .18s, box-shadow .18s;
+            margin-top:10px;
+        }
+        #btnNewChat:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+
+        /* Learning center */
+        .section-title {
+            margin-top: 16px;
+            font-weight:700;
+            font-size:15px;
+            background: linear-gradient(270deg, #ff7e5f, #feb47b);
+            background-size: 400% 400%;
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation: gradientShift 9s ease infinite;
+            display:flex;
+            align-items:center;
+            justify-content:space-between;
+            cursor:pointer;
+        }
+
+        #learningCenter{ margin-top:8px; display:flex; flex-direction:column; gap:8px; }
+
+        .sidebar-btn{
+            width:100%;
+            text-align:left;
+            padding:10px 12px;
+            margin:0;
+            border:none;
+            border-radius:12px;
+            background: transparent;
+            color: #e9eef8;
+            cursor:pointer;
+            transition: background .18s, transform .12s;
+            display:flex;
+            align-items:center;
+            gap:8px;
+            overflow:hidden;
+        }
+        .sidebar-btn:hover { background: rgba(255,255,255,0.03); transform: translateY(-2px); }
+        .sidebar-btn .gtext{
+            font-weight:600;
+            background: linear-gradient(270deg,#ff4e50,#f9d423,#1fa2ff);
+            background-size: 800% 800%;
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            animation: gradientShift 11s ease infinite;
+        }
+
+        /* --- Main area --- */
+        #main{
+            flex:1;
+            display:flex;
+            flex-direction:column;
+            gap:0;
+            min-height: calc(100vh - 140px);
+        }
+
+        /* Chat header — glass card */
+        #chatHeader {
+            padding: 14px 18px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.03);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.35);
+            color: #f0f4fa;
+        }
+
+        #chatHeader h3{ margin:0; font-size:18px; font-weight:600; }
+        #chatHeader .controls{ display:flex; gap:8px; align-items:center; }
+        #chatHeader button{
+            background:none; border:none; font-size:14px; color: #cfe6ff; cursor:pointer; transition: transform .12s;
+            padding:8px 10px; border-radius:10px;
+        }
+        #chatHeader button:hover { transform: translateY(-3px); color: white; background: rgba(255,255,255,0.02); }
+
+        /* Messages area */
+        #messages{
+            flex:1;
+            overflow-y:auto;
+            padding:18px;
+            margin-top:12px;
+            border-radius:14px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.01), transparent);
+        }
+        .msg{
+            margin-bottom:12px;
+            max-width:75%;
+            padding:12px 16px;
+            border-radius:14px;
+            line-height:1.4;
+            position:relative;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.25);
+        }
+        .msg.self{
+            background: linear-gradient(135deg,#43e97b,#38f9d7);
+            color: #032;
+            margin-left:auto;
+        }
+        .msg.other{
+            background: rgba(255,255,255,0.06);
+            color: #f0f4fa;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+        .msg span{ font-size:12px; color: rgba(255,255,255,0.6); display:block; margin-top:8px; }
+
+        /* Composer row */
+        #composer{
+            display:flex;
+            padding:12px 16px;
+            gap:10px;
+            margin-top:12px;
+            border-radius:14px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(8px);
+            align-items:center;
+        }
+        #composer input{
+            flex:1; padding:12px 14px; border-radius:999px; border: 1px solid rgba(255,255,255,0.06);
+            background: transparent; color: #f0f4fa; outline:none;
+        }
+        #composer button{
+            padding:10px 18px; border-radius:999px; border:none; cursor:pointer;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff; font-weight:600;
+            transition: transform .12s;
+        }
+        #composer button:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+
+        /* Learning frame */
+        #learningFrameContainer{ display:none; flex:1; margin-top:12px; border-radius:14px; overflow:hidden; }
+        #learningFrame{ width:100%; height:100%; border:none; display:block; }
+
+        /* Dialogs (keep look, slightly adjusted to match theme) */
+        dialog{
+            border:none; border-radius:14px; padding:18px; width:360px;
+            box-shadow:0 10px 40px rgba(0,0,0,0.45);
+            background: rgba(255,255,255,0.06); color: #f0f4fa;
+        }
+        dialog::backdrop{ background:rgba(0,0,0,0.45); }
+        dialog label{ display:block; margin-bottom:6px; color: #dfe9ff; font-size:13px; }
+        dialog input{ width:100%; padding:10px; margin:10px 0 16px; border-radius:10px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:#fff; }
+        dialog form{ display:flex; justify-content:flex-end; gap:10px; align-items:center; }
+        dialog button{ border:none; padding:8px 14px; border-radius:10px; cursor:pointer; }
+        dialog button[type="submit"]{ background: linear-gradient(135deg, #43e97b, #38f9d7); color: #022; }
+        dialog button[type="button"]{ background: rgba(255,255,255,0.06); color: #f0f4fa; }
+
+        #memberHint{ color:#ffb3b3; font-size:13px; min-height:18px; }
+
+        /* Footer spacing inside app-wrap */
+        .spacer { height: 12px; }
+
+        /* Responsive tweaks for mid-sized tablets (900px) */
+        @media (max-width: 900px){
+            #sidebar{ height: auto; position: relative; }
+            .app-wrap { flex-direction: column; }
+            #main { min-height: 400px; }
+            /* Hide the main sidebar toggle on smaller screens, we'll use a better mobile one */
+            #sidebarToggle { display: none !important; }
+        }
+
+        /* --- Mobile/Phone View Optimization (600px) --- */
+        @media (max-width: 600px) {
+            body { padding: 10px; } /* Reduce overall padding */
+            header h1 { font-size: 2em; } /* Smaller header */
+            .app-wrap { gap: 10px; } /* Smaller gap */
+            #chatHeader .controls { gap: 4px; } /* Tighten controls */
+            #chatHeader button { font-size: 12px; padding: 6px 8px; } /* Smaller buttons */
+
+            /* Sidebar changes */
+            #sidebar {
+                position: fixed; /* Fix the sidebar position */
+                top: 0;
+                left: 0;
+                bottom: 0;
+                width: 75%; /* Make sidebar full height, take up 75% of screen */
+                height: 100vh;
+                z-index: 1000; /* Bring to front */
+                transform: translateX(-100%); /* Start off-screen */
+                border-radius: 0 16px 16px 0; /* Adjust border radius */
+                padding-top: 60px; /* Space for the fixed header */
+            }
+
+            /* Class added by JS to show sidebar */
+            #sidebar.mobile-open {
+                transform: translateX(0);
+                box-shadow: 5px 0 30px rgba(0,0,0,0.6);
+            }
+
+            /* Sidebar toggle button (now in the main area) */
+            .mobile-menu-toggle {
+                display: block; /* Show the new toggle button */
+                font-size: 1.5em;
+                background: none;
+                border: none;
+                color: #e6eefc;
+                cursor: pointer;
+                padding: 0;
+                margin-right: 10px;
+                line-height: 1;
+            }
+
+            /* Adjust chat header for mobile to include the toggle */
+            #chatHeader {
+                padding: 10px 14px;
+            }
+            #chatHeader h3 {
+                flex: 1; /* Allow chat name to take up space */
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            /* Ensure main content is full width */
+            #main {
+                width: 100%;
+                min-height: calc(100vh - 120px); /* Adjust min height for mobile view */
+            }
+
+            /* Center messages and give more padding on mobile */
+            .msg {
+                max-width: 90%;
+            }
+
+            /* Composer adjustments */
+            #composer input {
+                padding: 10px 12px;
+            }
+            #composer button {
+                padding: 8px 14px;
+            }
+        }
+        /* ------------------------------------- */
+
+    </style>
+</head>
+<body class="dark">
+
+<header>
+    <h1>Quantum Chat</h1>
+</header>
+
+<div class="app-wrap">
+    <div id="sidebar">
+        <div id="sidebarToggle" style="cursor:pointer; user-select:none; font-weight:bold;">☰</div>
+
+        <h2>Chats</h2>
+        <div id="chatList"></div>
+        <button id="btnNewChat">+ New Chat</button>
+
+        <div class="section-title" style="display:flex; align-items:center; justify-content:space-between; cursor:pointer;" id="learningHeader">
+            <span>Learning Center</span>
+            <span id="toggleLearning" style="font-weight:bold;">-</span>
+        </div>
+        <div id="learningCenter">
+            <button class="sidebar-btn" onclick="openCourse('french')"><span class="gtext">French</span></button>
+            <button class="sidebar-btn" onclick="openCourse('math')"><span class="gtext">Math</span></button>
+            <button class="sidebar-btn" onclick="openCourse('spanish')"><span class="gtext">Spanish</span></button>
+            <button class="sidebar-btn" onclick="openCourse('hindi')"><span class="gtext">Hindi</span></button>
+            <button class="sidebar-btn" onclick="openCourse('mandarin')"><span class="gtext">Mandarin</span></button>
+            <button class="sidebar-btn" onclick="openCourse('gamehub')"><span class="gtext">Game Hub</span></button>
+            <button class="sidebar-btn" onclick="openCourse('python')"><span class="gtext">Python &lt;/&gt;</span></button>
+        </div>
+    </div>
+
+    <div id="main">
+        <div id="chatHeader">
+            <button class="mobile-menu-toggle" id="mobileMenuToggle" style="display:none;">☰</button>
+            <h3 id="chatName">Select a chat</h3>
+            <div class="controls">
+                <button id="btnRename">Rename</button>
+                <button id="btnAdd">+ Member</button>
+                <button id="btnShare">🔗 Share</button>
+                <button id="btnDelete">🗑 Delete</button>
+                <button id="btnBackToChat">Back</button>
+            </div>
+        </div>
+
+        <div id="messages"></div>
+
+        <div id="composer">
+            <input id="msgInput" placeholder="Type a message…">
+            <button id="sendBtn">Send</button>
+        </div>
+
+        <div id="learningFrameContainer">
+            <iframe id="learningFrame" title="Learning Course"></iframe>
+        </div>
+    </div>
+</div>
+
+<dialog id="dlgNewChat">
+    <form id="formNewChat">
+        <label for="newChatName">Chat Name</label>
+        <input id="newChatName" required autocomplete="off" />
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" onclick="dlgNewChat.close()">Cancel</button>
+            <button type="submit">Create</button>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="dlgAddMember">
+    <form id="formAddMember">
+        <label for="memberEmail">Member Gmail</label>
+        <input id="memberEmail" placeholder="example@gmail.com" autocomplete="off" />
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+            <div id="memberHint"></div>
+            <div style="display:flex; gap:10px;">
+                <button type="button" onclick="dlgAddMember.close()">Cancel</button>
+                <button type="submit">Add</button>
+            </div>
+        </div>
+    </form>
+</dialog>
+
+<dialog id="dlgRename">
+    <form id="formRename">
+        <label for="renameInput">New Chat Name</label>
+        <input id="renameInput" required autocomplete="off" />
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+            <button type="button" onclick="dlgRename.close()">Cancel</button>
+            <button type="submit">Save</button>
+        </div>
+    </form>
+</dialog>
+
+<script>
+    /* ======= small helpers ======= */
+    const el = id => document.getElementById(id);
+
+    /* ======= store & current user ======= */
+    const store = { chats: [], activeId: null };
+    const you = { email: "you@gmail.com", displayName: "You" };
+
+    /* ======= save/load ======= */
+    const save = () => localStorage.setItem("chatStore", JSON.stringify(store));
+    const load = () => {
+        try {
+            const raw = localStorage.getItem("chatStore");
+            if (!raw) return;
+            const parsed = JSON.parse(raw);
+            if(parsed && typeof parsed === 'object'){
+                store.chats = Array.isArray(parsed.chats) ? parsed.chats : store.chats;
+                store.activeId = parsed.activeId ?? store.activeId;
+            }
+        } catch(e){ console.warn("Failed to load chat store", e); }
+    };
+
+    /* ======= DOM elements ======= */
+    const dlgNewChat = el('dlgNewChat');
+    const formNewChat = el('formNewChat');
+    const dlgAddMember = el('dlgAddMember');
+    const formAddMember = el('formAddMember');
+    const dlgRename = el('dlgRename');
+    const formRename = el('formRename');
+    const sidebar = el('sidebar');
+
+    /* --- Mobile Toggles --- */
+    const mobileMenuToggle = el('mobileMenuToggle');
+    // Function to close sidebar on chat selection (important for mobile UX)
+    function closeMobileSidebar() {
+        if (window.innerWidth <= 600) {
+            sidebar.classList.remove('mobile-open');
+        }
+    }
+
+    // Toggle sidebar on mobile menu click
+    mobileMenuToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('mobile-open');
+    });
+
+    // Check screen size on load and resize to show/hide the correct toggle
+    function updateSidebarToggleVisibility() {
+        if (window.innerWidth <= 600) {
+            mobileMenuToggle.style.display = 'block';
+            el('sidebarToggle').style.display = 'none'; // Hide desktop toggle
+        } else {
+            mobileMenuToggle.style.display = 'none';
+            el('sidebarToggle').style.display = 'block'; // Show desktop toggle
+            sidebar.classList.remove('mobile-open'); // Ensure it's not stuck open
+        }
+    }
+    window.addEventListener('resize', updateSidebarToggleVisibility);
+
+
+    /* ======= render functions ======= */
+    function renderChatList(){
+        const container = el('chatList');
+        container.innerHTML = '';
+        store.chats.forEach(c=>{
+            const d = document.createElement('div');
+            d.className = 'chat-item' + (c.id === store.activeId ? ' active' : '');
+            d.dataset.id = c.id;
+            d.innerHTML = `<span class="chat-gradient">${escapeHtml(c.name)}</span>`;
+            d.addEventListener('click', ()=> {
+                store.activeId = c.id;
+                save(); renderChatList(); showChat();
+                closeMobileSidebar(); // <--- Important: close sidebar on chat select
+            });
+            container.appendChild(d);
+        });
+    }
+
+    function renderMessages(chat){
+        const out = el('messages');
+        out.innerHTML = '';
+        if(!chat) return;
+        chat.messages.forEach(m=>{
+            const div = document.createElement('div');
+            div.className = 'msg ' + (m.sender === you.email ? 'self' : 'other');
+            div.innerHTML = `<div>${escapeHtml(m.text)}</div><span>${escapeHtml(m.sender)}</span>`;
+            out.appendChild(div);
+        });
+        out.scrollTop = out.scrollHeight;
+    }
+
+    /* ======= helpers ======= */
+    function roomById(id){ return store.chats.find(c => c.id === id); }
+    function escapeHtml(s){ return String(s).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch])); }
+
+    /* ======= UI state: show chat vs learning ======= */
+    function showChat(){
+        const r = roomById(store.activeId);
+        if(!r){
+            el('chatName').textContent = 'Select a chat';
+            el('messages').innerHTML = '';
+            el('messages').style.display = 'block';
+            el('composer').style.display = 'flex';
+            el('learningFrameContainer').style.display = 'none';
+            el('btnRename').disabled = true;
+            el('btnAdd').disabled = true;
+            el('btnDelete').disabled = true;
+            el('btnRename').style.opacity = 0.5;
+            el('btnAdd').style.opacity = 0.5;
+            el('btnDelete').style.opacity = 0.5;
+            return;
+        }
+
+        el('chatName').textContent = r.name;
+        el('messages').style.display = 'block';
+        el('composer').style.display = 'flex';
+        el('learningFrameContainer').style.display = 'none';
+
+        el('btnRename').disabled = false;
+        el('btnAdd').disabled = false;
+        el('btnDelete').disabled = false;
+        el('btnRename').style.opacity = 1;
+        el('btnAdd').style.opacity = 1;
+        el('btnDelete').style.opacity = 1;
+
+        renderMessages(r);
+    }
+
+    /* ======= New chat handling ======= */
+    el('btnNewChat').addEventListener('click', ()=> {
+        el('newChatName').value = '';
+        dlgNewChat.showModal();
+        closeMobileSidebar(); // Close sidebar when opening dialog
+    });
+    formNewChat.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const name = el('newChatName').value.trim();
+        if(!name){ alert('Please enter a chat name'); return; }
+        const newRoom = { id: Date.now(), name, members: [you], messages: [] };
+        store.chats.push(newRoom);
+        store.activeId = newRoom.id;
+        save();
+        renderChatList();
+        showChat();
+        dlgNewChat.close();
+    });
+
+    /* ======= Add member handling ======= */
+    el('btnAdd').addEventListener('click', ()=> {
+        const r = roomById(store.activeId);
+        if(!r){ alert('Select a chat first'); return; }
+        el('memberEmail').value = '';
+        el('memberHint').textContent = '';
+        dlgAddMember.showModal();
+    });
+    formAddMember.addEventListener('submit', (ev) => {
+        ev.preventDefault();
+        const email = el('memberEmail').value.trim().toLowerCase();
+        const hint = el('memberHint');
+        hint.textContent = '';
+        if(!/^[^\s@]+@gmail\.com$/.test(email)){
+            hint.textContent = 'Enter a valid Gmail address (example@gmail.com).';
+            return;
+        }
+        const r = roomById(store.activeId);
+        if(!r){ hint.textContent='No active chat.'; return; }
+        if(r.members.some(m => m.email === email)){
+            hint.textContent = 'That user is already a member.';
+            return;
+        }
+        const member = { email, displayName: email.split('@')[0] };
+        r.members.push(member);
+        save();
+        renderMessages(r);
+        dlgAddMember.close();
+    });
+
+    /* ======= Rename handling ======= */
+    el('btnRename').addEventListener('click', ()=>{
+        const r = roomById(store.activeId);
+        if(!r){ alert('Select a chat first'); return; }
+        el('renameInput').value = r.name;
+        dlgRename.showModal();
+    });
+    formRename.addEventListener('submit', (ev)=>{
+        ev.preventDefault();
+        const newName = el('renameInput').value.trim();
+        if(!newName){ alert('Type a name'); return; }
+        const r = roomById(store.activeId);
+        if(!r) return;
+        r.name = newName;
+        save();
+        renderChatList();
+        showChat();
+        dlgRename.close();
+    });
+
+    /* ======= Delete handling ======= */
+    el('btnDelete').addEventListener('click', ()=> {
+        const r = roomById(store.activeId);
+        if(!r){ alert('Select a chat first'); return; }
+        const confirmMsg = `Delete chat "${r.name}"? This will remove it from local storage and cannot be undone.`;
+        if(!confirm(confirmMsg)) return;
+        const idx = store.chats.findIndex(c => c.id === r.id);
+        if(idx !== -1) store.chats.splice(idx, 1);
+        if(store.chats.length > 0){
+            store.activeId = store.chats[0].id;
+        } else {
+            store.activeId = null;
+        }
+        save();
+        renderChatList();
+        showChat();
+    });
+
+    /* ======= Send message ======= */
+    el('sendBtn').addEventListener('click', ()=>{
+        const txt = el('msgInput').value.trim();
+        if(!txt) return;
+        const r = roomById(store.activeId);
+        if(!r){ alert('Select a chat to send a message'); return; }
+        r.messages.push({ text: txt, sender: you.email, time: Date.now() });
+        el('msgInput').value = '';
+        save();
+        renderMessages(r);
+    });
+
+    el('msgInput').addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter' && !e.shiftKey){ e.preventDefault(); el('sendBtn').click(); }
+    });
+
+    /* ======= Share link logic ======= */
+    function getShareableLink(chatId){
+        return `${window.location.origin}${window.location.pathname}?join=${chatId}`;
+    }
+    function showShareLink(chat){
+        if(!chat){ alert('Select a chat first'); return; }
+        const link = getShareableLink(chat.id);
+        window.prompt('Share this link to invite someone:', link);
+    }
+    el('btnShare').addEventListener('click', ()=>{
+        const r = roomById(store.activeId);
+        if(r) showShareLink(r);
+    });
+
+    /* ======= Learning center loader (subfolders) ======= */
+    function openCourse(course){
+        const urls = {
+            french:  "courses/french/french.html",
+            math:    "courses/math/math.html",
+            spanish: "courses/spanish/spanish.html",
+            hindi:   "courses/hindi/hindi.html",
+            mandarin:"courses/mandarin/mandarin.html",
+            gamehub: "courses/gamehub/gamehub.html",
+            python: "courses/gamehub/coding.html",
+        };
+        const url = urls[course];
+        if(!url){ alert('Course not available'); return; }
+        el('learningFrame').src = url;
+        el('messages').style.display = 'none';
+        el('composer').style.display = 'none';
+        el('learningFrameContainer').style.display = 'block';
+
+        el('btnRename').disabled = true;
+        el('btnAdd').disabled = true;
+        el('btnDelete').disabled = true;
+        el('btnRename').style.opacity = 0.5;
+        el('btnAdd').style.opacity = 0.5;
+        el('btnDelete').style.opacity = 0.5;
+
+        el('chatName').textContent = course.charAt(0).toUpperCase() + course.slice(1) + ' Course';
+
+        closeMobileSidebar(); // <--- Important: close sidebar when opening course
+    }
+
+    el('btnBackToChat').addEventListener('click', ()=>{
+        el('learningFrame').src = 'about:blank';
+        showChat();
+    });
+
+    /* ======= join via URL handling ======= */
+    function tryHandleJoinParam(){
+        const params = new URLSearchParams(window.location.search);
+        const join = params.get('join');
+        if(!join) return false;
+        const jid = Number(join);
+        if(Number.isNaN(jid)) return false;
+        load();
+        const found = store.chats.find(c => c.id === jid);
+        if(found){
+            store.activeId = jid;
+        } else {
+            store.chats.push({ id: jid, name: 'Joined Chat', members: [you], messages: [] });
+            store.activeId = jid;
+        }
+        save();
+        renderChatList();
+        showChat();
+        return true;
+    }
+
+    /* ======= initial load ======= */
+    load();
+    updateSidebarToggleVisibility(); // Initial check for mobile view
+    const handled = tryHandleJoinParam();
+    if(!handled){
+        renderChatList();
+        showChat();
+    }
+
+    /* ======= Theme toggle (keeps the button behavior) ======= */
+    (function(){
+        const themeBtn = document.getElementById('btnToggleTheme');
+        function updateBtnText(){
+            if(document.body.classList.contains('dark')){
+                themeBtn.textContent = "☀️ Light";
+            } else {
+                themeBtn.textContent = "🌙 Dark";
+            }
+        }
+        updateBtnText();
+        themeBtn.addEventListener('click', ()=>{
+            document.body.classList.toggle('dark');
+            updateBtnText();
+            // optional: a subtle class toggle could be added to change card backgrounds; we rely on the CSS glass look already used
+        });
+    })();
+
+    const learningCenter = el('learningCenter');
+    const toggleLearning = el('toggleLearning');
+
+    toggleLearning.addEventListener('click', () => {
+        if(learningCenter.style.display === 'none'){
+            learningCenter.style.display = 'flex';
+            toggleLearning.textContent = '-';
+        } else {
+            learningCenter.style.display = 'none';
+            toggleLearning.textContent = '+';
+        }
+    });
+
+    const sidebarToggle = el('sidebarToggle');
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('collapsed');
+    });
+
+</script>
+</body>
+</html>

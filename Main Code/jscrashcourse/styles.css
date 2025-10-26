@@ -1,0 +1,76 @@
+body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(120deg, #141e30, #243b55);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+header h1 {
+    font-size: 3em;
+    background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+    background-size: 800% 800%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 12s ease infinite;
+    text-align: center;
+    margin: 30px 0 40px;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50% }
+    50% { background-position: 100% 50% }
+    100% { background-position: 0% 50% }
+}
+
+main {
+    width: 100%;
+    max-width: 1000px;
+}
+
+table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 15px;
+    text-align: center;
+}
+
+td {
+    padding: 10px;
+}
+
+.btn {
+    display: block;
+    width: 100%;
+    padding: 14px 20px;
+    font-size: 1em;
+    font-weight: 500;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    color: white;
+    white-space: normal; /* allows wrapping inside buttons */
+    word-wrap: break-word;
+}
+
+.btn-blue {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+}
+.btn-blue:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}
+
+.btn-green {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+.btn-green:hover {
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+}

@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Code Playground ✧</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        :root{
+            --bg: linear-gradient(120deg,#141e30,#243b55);
+            --card: rgba(255,255,255,0.06);
+            --glass: rgba(255,255,255,0.04);
+            --accent: linear-gradient(270deg,#34c759,#007aff,#ff2d55);
+            --muted: rgba(255,255,255,0.75);
+            --radius: 16px;
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
+        }
+        *{box-sizing:border-box}
+        html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+        body{background:var(--bg);color:white;padding:20px;display:flex;align-items:flex-start;justify-content:center;}
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        /* page container */
+        .container{width:100%;max-width:1200px;display:flex;flex-direction:column;gap:18px;}
+
+        /* header */
+        .header{
+            display:flex;align-items:center;justify-content:space-between;gap:12px;
+        }
+        .header h1{
+            margin:0;
+            font-size:28px;
+            background: linear-gradient(270deg,#ff4e50,#f9d423,#1fa2ff,#12d8fa,#a6ffcb);
+            -webkit-background-clip:text;
+            -webkit-text-fill-color:transparent;
+            background-size:800% 800%;
+            animation: gradientShift 12s ease infinite;
+        }
+
+        /* main card */
+        .card{
+            background:var(--card);
+            border-radius:20px;
+            padding:18px;
+            display:flex;
+            gap:16px;
+            box-shadow:0 18px 60px rgba(0,0,0,0.5);
+            border:1px solid rgba(255,255,255,0.03);
+            flex-direction:column;
+        }
+
+        /* toolbar */
+        .toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;}
+        .btn{
+            padding:10px 14px;border-radius:14px;border:none;cursor:pointer;font-weight:600;
+            background:var(--accent);background-size:500% 500%;animation:gradientShift 10s linear infinite;color:#fff;
+            box-shadow:0 8px 24px rgba(0,0,0,0.35);
+        }
+        .btn.secondary{ background: linear-gradient(135deg,#667eea,#764ba2); }
+        .btn.ghost{
+            background:transparent;border:1px solid rgba(255,255,255,0.06);box-shadow:none;color:var(--muted);font-weight:600;
+        }
+        .small{ padding:8px 10px;border-radius:12px;font-size:0.9rem;}
+
+        /* editor layout */
+        .editor-row{ display:flex; gap:12px; align-items:stretch; width:100%; }
+        .editor{
+            flex:1;
+            min-width:160px;
+            display:flex;
+            flex-direction:column;
+            border-radius:12px;
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,0.04);
+            background:var(--glass);
+        }
+        .editor .title{
+            padding:10px 12px;
+            font-weight:700;
+            font-size:14px;
+            display:flex;align-items:center;justify-content:space-between;
+            border-bottom:1px solid rgba(255,255,255,0.03);
+        }
+        .editor textarea{
+            flex:1;
+            width:100%;
+            min-height:220px;
+            padding:12px;
+            background:transparent;
+            border:0;
+            resize:vertical;
+            outline:none;
+            color:inherit;
+            font-family:var(--mono);
+            font-size:13px;
+            line-height:1.45;
+        }
+
+        /* preview + console */
+        .preview-row{ display:flex; gap:12px; align-items:flex-start; width:100%; margin-top:10px; }
+        .preview{
+            flex:1;
+            min-height:360px;
+            border-radius:12px;
+            overflow:hidden;
+            border:1px solid rgba(255,255,255,0.04);
+            background:#0b0b0b;
+        }
+        .preview iframe{ width:100%; height:100%; border:0; display:block; }
+
+        /* console */
+        .console{
+            width:340px;
+            min-height:360px;
+            border-radius:12px;
+            background:var(--glass);
+            padding:10px;
+            border:1px solid rgba(255,255,255,0.03);
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+        .console .head{ display:flex;align-items:center;justify-content:space-between; }
+        .console .log{ flex:1; overflow:auto; font-family:var(--mono); font-size:13px; color:#e6e6e6; padding:6px; background:transparent; border-radius:8px; }
+        .log .entry{ margin-bottom:8px; padding:6px; border-radius:8px; background:rgba(0,0,0,0.18); }
+        .log .error{ color: #ffb4b4; }
+        .log .warn{ color: #ffd8a8; }
+        .controls-row{ display:flex; gap:8px; align-items:center; }
+
+        /* footer tips */
+        .tips{ font-size:13px; color:var(--muted); margin-top:8px; }
+
+        /* responsive */
+        @media (max-width:1000px){
+            .editor-row{ flex-direction:column; }
+            .preview-row{ flex-direction:column; }
+            .console{ width:100%; min-height:200px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>✧ Code Playground ✧</h1>
+        <div style="display:flex;gap:10px;align-items:center;">
+            <button id="btnOpenNew" class="btn small">Open in new window</button>
+            <button id="btnDownload" class="btn secondary small">Download .html</button>
+        </div>
+    </div>
+
+    <div class="card" role="main" aria-label="Code playground">
+        <div class="toolbar" style="justify-content:space-between;">
+            <div style="display:flex;gap:8px;align-items:center;">
+                <button id="btnRun" class="btn">Run (Ctrl/Cmd+Enter)</button>
+                <button id="btnReset" class="btn ghost small">Reset</button>
+                <label style="display:flex;align-items:center;gap:8px;color:var(--muted);margin-left:8px;">
+                    Template:
+                    <select id="presetSelect" style="margin-left:6px;padding:6px;border-radius:8px;background:transparent;color:inherit;border:1px solid rgba(255,255,255,0.06);">
+                        <option value="starter">Starter</option>
+                        <option value="hello">Hello world</option>
+                        <option value="canvas">Canvas demo</option>
+                        <option value="neon">Neon UI (CSS preset)</option>
+                        <option value="glass">Glass UI (CSS preset)</option>
+                        <option value="retro">Retro (CSS preset)</option>
+                        <option value="dark-zen">Dark Zen (CSS preset)</option>
+                        <option value="blank">Blank</option>
+                    </select>
+                </label>
+            </div>
+
+            <div style="display:flex;gap:8px;align-items:center;">
+                <div style="color:var(--muted);font-weight:600;">Preview</div>
+                <div style="width:12px;height:12px;border-radius:50%;background:#28c76f;box-shadow:0 0 8px #28c76f;"></div>
+            </div>
+        </div>
+
+        <div class="editor-row" style="margin-top:12px;">
+            <div class="editor" style="flex:1.1">
+                <div class="title">
+                    <div>HTML</div>
+                    <div style="font-size:12px;color:var(--muted)">index.html</div>
+                </div>
+                <textarea id="htmlEditor" spellcheck="false"></textarea>
+            </div>
+
+            <div class="editor">
+                <div class="title">CSS</div>
+                <textarea id="cssEditor" spellcheck="false"></textarea>
+            </div>
+
+            <div class="editor">
+                <div class="title">JavaScript</div>
+                <textarea id="jsEditor" spellcheck="false"></textarea>
+            </div>
+        </div>
+
+        <div class="preview-row">
+            <div class="preview" id="previewWrap">
+                <iframe id="previewFrame" title="Preview" sandbox="allow-scripts allow-modals"></iframe>
+            </div>
+
+            <div class="console" aria-live="polite">
+                <div class="head">
+                    <div style="font-weight:700">Console</div>
+                    <div class="controls-row">
+                        <button id="clearConsole" class="btn ghost small">Clear</button>
+                        <button id="toggleVerbose" class="btn ghost small">Verbose</button>
+                    </div>
+                </div>
+                <div class="log" id="consoleLog" role="log"></div>
+                <div class="tips">Tip: use <code>console.log()</code> inside your JavaScript. Errors and uncaught exceptions will be shown here.</div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    /*
+      Code Playground
+      - Build iframe.srcdoc from editors and a small runtime shim that forwards console messages and errors to parent.
+      - Parent listens for postMessage and displays messages in the Console panel.
+      - Shortcut: Ctrl/Cmd + Enter to run
+    */
+
+    const htmlEditor = document.getElementById('htmlEditor');
+    const cssEditor  = document.getElementById('cssEditor');
+    const jsEditor   = document.getElementById('jsEditor');
+    const previewFrame = document.getElementById('previewFrame');
+    const btnRun = document.getElementById('btnRun');
+    const btnReset = document.getElementById('btnReset');
+    const btnOpenNew = document.getElementById('btnOpenNew');
+    const btnDownload = document.getElementById('btnDownload');
+    const consoleLog = document.getElementById('consoleLog');
+    const clearConsoleBtn = document.getElementById('clearConsole');
+    const presetSelect = document.getElementById('presetSelect');
+    const toggleVerbose = document.getElementById('toggleVerbose');
+
+    let verbose = false;
+
+    // Starter template
+    const TEMPLATES = {
+        starter: {
+            html: `<!-- Starter HTML -->
+<div style="padding:22px;font-family:Inter,system-ui, -apple-system,Segoe UI, Roboto, sans-serif;">
+  <h2 style="margin-top:0">Welcome to Code Playground</h2>
+  <p>Use the editors to the right to author HTML, CSS and JavaScript. Press Run or Ctrl/Cmd+Enter.</p>
+  <div id="app"></div>
+</div>`,
+            css: `/* Starter CSS */
+body{ margin:0; font-family:Inter,system-ui, -apple-system,Segoe UI, Roboto, sans-serif; background:linear-gradient(135deg,#0f1724,#0b1220); color:#fff;}
+#app{ padding:12px; border-radius:8px; background:rgba(255,255,255,0.04); }`,
+            js: `// Starter JS
+console.log('Hello from the sandboxed JS!');
+const app = document.getElementById('app');
+app.innerHTML += '<p style="opacity:0.9">DOM updated by user JS.</p>';`
+        },
+
+        hello: {
+            html: `<div style="padding:30px;text-align:center">
+  <h2>👋 Hello, world!</h2>
+  <button id="btn">Click me</button>
+  <div id="out" style="margin-top:12px"></div>
+</div>`,
+            css: `button{ padding:10px 16px; border-radius:8px; border:none; background:#34c759; color:#042; font-weight:700; cursor:pointer; }`,
+            js: `document.getElementById('btn').addEventListener('click', () => {
+  console.log('Button clicked!');
+  document.getElementById('out').textContent = 'You clicked the button at ' + new Date().toLocaleTimeString();
+});`
+        },
+
+        canvas: {
+            html: `<canvas id="c" width="480" height="240" style="width:100%;height:auto;display:block;border-radius:8px"></canvas>`,
+            css: `body{padding:12px;margin:0;background:#061129;color:#fff}`,
+            js: `const c = document.getElementById('c');
+const ctx = c.getContext('2d');
+let t=0;
+function frame(){
+  t+=0.02;
+  ctx.clearRect(0,0,c.width,c.height);
+  for(let i=0;i<20;i++){
+    ctx.fillStyle = 'hsl('+((i*20 + t*40)%360)+',80%,60%)';
+    const x = (c.width/2) + Math.sin(t + i*0.3)*120;
+    const y = (c.height/2) + Math.cos(t + i*0.5)*40;
+    ctx.beginPath();
+    ctx.arc(x,y,18,0,Math.PI*2);
+    ctx.fill();
+  }
+  requestAnimationFrame(frame);
+}
+frame();`
+        },
+
+        neon: {
+            html: `<div style="padding:32px;font-family:Inter,system-ui, -apple-system,Segoe UI, Roboto, sans-serif;">
+  <h1 class="neon">Neon UI</h1>
+  <p class="muted">A quick demo of glowing neon buttons and cards.</p>
+  <div class="card-demo">
+    <button id="neonBtn">Glow</button>
+  </div>
+</div>`,
+            css: `:root{--pink:#ff4df0;--cyan:#2be7ff;--bg:#0e0f1a}
+body{margin:0;background:radial-gradient(circle at 10% 10%, #091025, #070712);color:#e6f7ff}
+h1.neon{font-size:36px;margin:0 0 8px;background:linear-gradient(90deg,var(--pink),var(--cyan));-webkit-background-clip:text;color:transparent;text-shadow:0 0 20px rgba(43,231,255,0.08)}
+.muted{opacity:0.9;color:#bcd}
+.card-demo{margin-top:18px;padding:18px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(0,0,0,0.06));box-shadow:0 8px 40px rgba(43,231,255,0.03)}
+button{background:linear-gradient(90deg,var(--pink),var(--cyan));border:none;color:#041028;padding:10px 16px;border-radius:12px;font-weight:700;cursor:pointer;box-shadow:0 6px 30px rgba(43,231,255,0.12),0 0 30px rgba(255,77,240,0.08)}`,
+            js: `document.getElementById('neonBtn').addEventListener('click', ()=>{
+  console.log('Neon button pressed — nice glow!');
+  alert('Neon! ✨');
+});`
+        },
+
+        glass: {
+            html: `<div style="padding:28px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
+  <h2>Glass UI</h2>
+  <p>Subtle frosted glass card and soft shadows.</p>
+  <div class="glass-card">Hello — glass effect</div>
+</div>`,
+            css: `.glass-card{margin-top:12px;padding:14px;border-radius:12px;background:rgba(255,255,255,0.06);backdrop-filter:blur(8px);box-shadow:0 8px 30px rgba(0,0,0,0.35)}`,
+            js: `console.log('Glass preset loaded');`
+        },
+
+        retro: {
+            html: `<div style="padding:20px;font-family: 'Courier New', Courier, monospace;">
+  <h2>Retro Terminal</h2>
+  <div id="term" style="margin-top:12px;white-space:pre-wrap;"></div>
+</div>`,
+            css: `body{background:#111;color:#7fffd4}
+#term{padding:12px;border-radius:8px;background:#021012;border:2px solid #043;box-shadow:inset 0 0 20px rgba(0,255,200,0.04)}`,
+            js: `const t = document.getElementById('term');
+let i=0;
+const lines = [
+  "Booting retro-ui v1.2",
+  "Loading shaders... done",
+  "Welcome to the terminal playground",
+  "Type magic in your JS!"
+];
+function tick(){ if(i<lines.length){ t.textContent += lines[i] + "\\n"; i++; setTimeout(tick,500); } }
+tick();`
+        },
+
+        "dark-zen": {
+            html: `<div style="padding:30px;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;">
+  <h2>Dark Zen</h2>
+  <p>Calm centered content with minimal chrome.</p>
+  <div id="card" style="margin-top:18px;padding:18px;border-radius:12px;">A peaceful place for code.</div>
+</div>`,
+            css: `body{background:linear-gradient(180deg,#0b1220,#07101a);color:#dfe7ff}
+#card{background:linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0.01));box-shadow:0 6px 30px rgba(0,0,0,0.5);border-radius:12px}`,
+            js: `console.log('Dark Zen ready — breathe.');`
+        },
+
+        blank: {
+            html: `<!-- blank -->\n`,
+            css: `/* blank */\n`,
+            js: `// blank\n`
+        }
+    };
+
+    // populate editors with selected template
+    function loadTemplate(key){
+        const t = TEMPLATES[key] || TEMPLATES.starter;
+        htmlEditor.value = t.html;
+        cssEditor.value  = t.css;
+        jsEditor.value   = t.js;
+    }
+    loadTemplate('starter');
+
+    // Helper: build combined HTML for iframe srcdoc
+    function buildSrcDoc(html, css, js){
+        // --------------------------------------------------------------------
+        // Improved runtime shim:
+        // - sanitizes and truncates console args
+        // - avoids dumping huge HTML/object blobs into parent console
+        // --------------------------------------------------------------------
+        const runtime = `
+<script>
+/* improved runtime shim: forward console + errors to parent (sanitized) */
+(function(){
+  function safeSerialize(v){
+    try{
+      if (v === null) return 'null';
+      if (v === undefined) return 'undefined';
+      const t = typeof v;
+      if (t === 'string'){
+        // strip tags, truncate long strings
+        const s = v.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        return s.length > 600 ? s.slice(0,600) + '... (truncated)' : s;
+      }
+      if (t === 'number' || t === 'boolean') return String(v);
+      if (t === 'function') return '[Function]';
+      if (t === 'object') {
+        // try small JSON, otherwise summary
+        try {
+          const json = JSON.stringify(v);
+          if (json && json.length <= 600) return json;
+          return '[Object]';
+        } catch(e) { return '[Object]'; }
+      }
+      return String(v);
+    } catch(e) { return '[Unserializable]'; }
+  }
+
+  function send(kind, payload){
+    try{
+      parent.postMessage({__fromSandbox:true, kind: kind, payload: payload}, '*');
+    }catch(e){}
+  }
+
+  ['log','info','warn','error'].forEach(k=>{
+    const orig = console[k];
+    console[k] = function(...args){
+      try{
+        const serialized = args.map(a => safeSerialize(a));
+        send('console', {type:k, args: serialized});
+      }catch(e){}
+      orig.apply(console, args);
+    };
+  });
+
+  window.addEventListener('error', function(ev){
+    try{
+      send('error', {message: ev && ev.message ? String(ev.message) : 'Unknown error', filename: ev.filename||'', lineno: ev.lineno||0, colno: ev.colno||0});
+    }catch(e){}
+  });
+  window.addEventListener('unhandledrejection', function(ev){
+    try{
+      const reason = ev && ev.reason ? (ev.reason.message || String(ev.reason)) : 'Unknown rejection';
+      send('error', {message: 'UnhandledRejection: ' + reason});
+    }catch(e){}
+  });
+})();
+<\/script>
+  `;
+        // final assembled doc
+        return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>${css}\n/* Playground injected CSS end */</style>
+</head>
+<body>
+${html}
+<script>
+try{
+${js}
+}catch(e){
+  console.error('UserScriptError', e && e.stack ? e.stack : String(e));
+}
+< /script>
+${runtime}
+</body>
+</html>`;
+}
+
+// Run: set iframe.srcdoc to assembled doc
+function runPreview(){
+clearConsole();
+// get latest code
+const html = htmlEditor.value;
+const css  = cssEditor.value;
+const js   = jsEditor.value;
+const src = buildSrcDoc(html, css, js);
+previewFrame.srcdoc = src;
+logToConsole('info', 'Preview updated.');
+}
+
+// Console rendering
+function logToConsole(type, ...args){
+const div = document.createElement('div');
+div.className = 'entry ' + (type==='error' ? 'error' : (type==='warn' ? 'warn' : ''));
+const time = new Date().toLocaleTimeString();
+div.innerHTML = `<div style="font-size:12px;color:var(--muted);margin-bottom:6px">${time} · ${type.toUpperCase()}</div><div>${args.map(a=>escapeHtml(a)).join(' ')}</div>`;
+consoleLog.appendChild(div);
+consoleLog.scrollTop = consoleLog.scrollHeight;
+}
+function clearConsole(){ consoleLog.innerHTML = ''; }
+
+// safely escape html for console display
+function escapeHtml(s){
+if(typeof s !== 'string') s = String(s);
+return s.replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+}
+
+// receive messages from iframe (console/ errors)
+window.addEventListener('message', (ev) => {
+const data = ev.data;
+if(!data || !data.__fromSandbox) return;
+if(data.kind === 'console'){
+const args = Array.isArray(data.payload.args) ? data.payload.args : [data.payload];
+const typ = data.payload.type || 'log';
+logToConsole(typ, ...args);
+} else if(data.kind === 'error'){
+// payload could be object with message etc
+if(typeof data.payload === 'object'){
+const msg = data.payload.message || JSON.stringify(data.payload);
+logToConsole('error', msg);
+} else {
+logToConsole('error', String(data.payload));
+}
+}
+}, false);
+
+// wire run button and keyboard shortcut
+btnRun.addEventListener('click', runPreview);
+document.addEventListener('keydown', (e) => {
+if((e.ctrlKey || e.metaKey) && e.key === 'Enter'){ e.preventDefault(); runPreview(); }
+});
+
+// reset to current template
+btnReset.addEventListener('click', () => {
+const current = presetSelect.value || 'starter';
+loadTemplate(current);
+logToConsole('info', 'Editors reset to template: ' + current);
+});
+
+// open in new window: create blob URL to avoid cross-origin limitations
+btnOpenNew.addEventListener('click', () => {
+const src = buildSrcDoc(htmlEditor.value, cssEditor.value, jsEditor.value);
+const blob = new Blob([src], {type:'text/html'});
+const url = URL.createObjectURL(blob);
+window.open(url, '_blank');
+});
+
+// download as .html
+btnDownload.addEventListener('click', () => {
+const src = buildSrcDoc(htmlEditor.value, cssEditor.value, jsEditor.value);
+const blob = new Blob([src], {type:'text/html'});
+const a = document.createElement('a');
+a.href = URL.createObjectURL(blob);
+a.download = 'playground.html';
+document.body.appendChild(a);
+a.click();
+a.remove();
+setTimeout(()=> URL.revokeObjectURL(a.href), 5000);
+});
+
+// clear console
+clearConsoleBtn.addEventListener('click', clearConsole);
+
+// preset select change
+presetSelect.addEventListener('change', (e) => {
+loadTemplate(e.target.value);
+});
+
+// toggle verbose (affects style only here, but reserved to add advanced info)
+toggleVerbose.addEventListener('click', ()=>{
+verbose = !verbose;
+toggleVerbose.textContent = verbose ? 'Verbose: On' : 'Verbose: Off';
+logToConsole('info', 'Verbose ' + (verbose ? 'enabled' : 'disabled'));
+});
+
+// populate initial sample content & run once
+loadTemplate('starter');
+runPreview();
+
+</script>
+</body>
+</html>

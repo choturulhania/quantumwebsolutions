@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum DB</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px; /* Default desktop padding */
+        }
+        header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(270deg,#ff4e50,#f9d423,#1fa2ff,#12d8fa,#a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            margin: 20px 0 30px;
+        }
+        @keyframes gradientShift {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+        .card {
+            backdrop-filter: blur(12px);
+            background: rgba(255,255,255,0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            padding: 20px;
+            margin: 10px;
+            text-align: center;
+            width: 300px; /* Default desktop width */
+        }
+
+        .card h3 {
+            margin-top: 0;
+            color: #38f9d7;
+            font-size: 1.5em;
+        }
+
+        input {
+            width: 80%;
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            margin: 8px 0;
+            text-align: center;
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+            font-size: 1em;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+            box-sizing: border-box; /* Include padding in width calculation */
+        }
+        /* Style for placeholder text */
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            margin: 5px;
+            color: white;
+            background: linear-gradient(135deg,#43e97b,#38f9d7);
+            transition: 0.3s;
+            font-size: 1em;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .btn:hover { transform: translateY(-2px); }
+
+        /* Ensure button container allows wrapping */
+        .card > .btn {
+            display: inline-block;
+        }
+
+        #result {
+            margin-top: 20px;
+            font-size: 1.2em;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow-wrap: break-word;
+        }
+
+        /* --- Mobile Optimization (Max 500px) --- */
+        @media (max-width: 500px) {
+            body {
+                padding: 10px; /* Reduce body padding */
+            }
+
+            header h1 {
+                font-size: 2em;
+                margin: 15px 0 20px;
+            }
+
+            .card {
+                width: 95%; /* Make card fluid width */
+                max-width: 400px; /* Optional: limit maximum size slightly */
+                padding: 15px;
+                margin: 5px;
+                border-radius: 15px;
+            }
+
+            /* Make inputs wider and taller for better touch targets */
+            input {
+                width: 90%;
+                padding: 12px;
+                font-size: 1.1em;
+            }
+
+            /* Make buttons bigger for better touch targets and stacked appearance */
+            .btn {
+                width: calc(50% - 10px); /* Keep two buttons per line */
+                padding: 12px 10px;
+                font-size: 1em;
+                margin: 5px 0;
+            }
+
+            /* Force the two buttons in the first card to stack/wrap nicely if needed */
+            .card:first-of-type .btn {
+                width: calc(100% / 2 - 10px); /* Two buttons per row */
+            }
+
+            #result {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+<header><h1>Quantum DB</h1></header>
+
+<div class="card">
+    <h3>Add Pair</h3>
+    <input id="key" placeholder="Enter key">
+    <input id="value" placeholder="Enter value">
+    <button class="btn" onclick="addPair()">Save</button>
+    <button class="btn" onclick="downloadYAML()">Download YAML</button>
+</div>
+
+<div class="card">
+    <h3>Find Value</h3>
+    <input id="search" placeholder="Enter key to find">
+    <button class="btn" onclick="findValue()">Search</button>
+    <div id="result"></div>
+</div>
+
+<script>
+    // Initialize store from localStorage, or an empty object
+    let store = JSON.parse(localStorage.getItem("yamlStore")) || {};
+
+    /**
+     * Saves a key-value pair to the local store and localStorage.
+     */
+    function addPair() {
+        const key = document.getElementById("key").value.trim();
+        const value = document.getElementById("value").value.trim();
+        if (!key || !value) {
+            alert("Fill both blanks!");
+            return;
+        }
+        store[key] = value;
+        localStorage.setItem("yamlStore", JSON.stringify(store));
+        document.getElementById("key").value = "";
+        document.getElementById("value").value = "";
+        alert("Saved!");
+    }
+
+    /**
+     * Searches for a key in the local store and displays the result.
+     */
+    function findValue() {
+        const key = document.getElementById("search").value.trim();
+        // Display the value or "Not found"
+        document.getElementById("result").innerText = store[key] || "Not found";
+    }
+
+    /**
+     * Converts the store to a YAML string and initiates a download.
+     */
+    function downloadYAML() {
+        let yaml = "";
+        // Simple key: value format for YAML
+        for (let k in store) {
+            if (store.hasOwnProperty(k)) {
+                // Escape values that might break simple YAML structure, though basic quoting is usually enough
+                // For this simple example, we assume non-complex strings.
+                yaml += `${k}: ${store[k]}\n`;
+            }
+        }
+
+        // Create a Blob and initiate the file download
+        const blob = new Blob([yaml], { type: "text/yaml" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "data.yaml";
+        a.click();
+        URL.revokeObjectURL(url); // Clean up the URL object
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✧ Quantum Docs ✧</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+  <style>
+    /* ===================== NEW GRADIENT BUTTONS ===================== */
+    .btn-blue {
+      background: linear-gradient(135deg, #43e97b, #38f9d7); /* Green/Cyan Gradient */
+      color: #141e30; /* Dark text for contrast */
+    }
+    .btn-blue:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(67, 233, 123, 0.4);
+    }
+    .btn-green {
+      background: linear-gradient(135deg, #667eea, #764ba2); /* Purple/Blue Gradient */
+      color: #fff;
+    }
+    .btn-green:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+    }
+    /* ===================== BODY & LAYOUT ===================== */
+    body {
+      margin:0;
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+      background: linear-gradient(120deg, #141e30, #243b55);
+      color:#fff;
+      display:flex;
+      flex-direction:column;
+      min-height:100vh;
+      overflow-x: hidden; /* Prevents horizontal scroll during transition */
+    }
+
+    /* ===================== HEADER (Title) ===================== */
+    header {
+      width:100%;
+      padding:20px 0;
+      text-align:center;
+      background: linear-gradient(120deg, #141e30, #243b55);
+    }
+    header h1 {
+      font-size:3em;
+      margin:0;
+      background: linear-gradient(270deg,#ff4e50,#f9d423,#1fa2ff,#12d8fa,#a6ffcb);
+      background-size: 800% 800%;
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      animation: gradientShift 12s ease infinite;
+    }
+    @keyframes gradientShift {
+      0%{background-position:0% 50%}
+      50%{background-position:100% 50%}
+      100%{background-position:0% 50%}
+    }
+
+    /* ===================== MAIN WRAPPER ===================== */
+    .main-wrapper {
+      display:flex;
+      flex:1;
+      width:100%;
+      max-width:1600px;
+      margin:0 auto;
+      gap:20px;
+      padding:20px;
+    }
+
+    /* ---------------------------------------------------- */
+    /* ======== SIDEBAR PANEL (COLLAPSIBLE LOGIC) ========= */
+    /* ---------------------------------------------------- */
+    #sidebar-panel { /* Container for the file list and toggle button */
+      width: 280px;
+      flex-shrink: 0;
+      position: relative;
+      transition: width 0.3s ease, min-width 0.3s ease, opacity 0.3s ease;
+    }
+
+    /* The actual file list content */
+    #fileList {
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+      /* Glass effect */
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      padding:20px;
+      min-height: calc(100% - 40px); /* Adjust height for padding */
+      overflow-y:auto;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      transition: opacity 0.3s ease 0.1s, padding 0.3s ease; /* Delay opacity for smooth fade out */
+    }
+
+    .file-item {
+      background: rgba(255,255,255,0.1);
+      padding:12px;
+      border-radius:12px;
+      cursor:pointer;
+      transition: all 0.2s;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      opacity: 1; /* Initial state */
+      transition: opacity 0.3s ease;
+    }
+    .file-item:hover { background: rgba(255,255,255,0.2); }
+    .file-item button {
+      background:none;
+      border:none;
+      color:#fff;
+      cursor:pointer;
+    }
+    .file-item button:hover { color:#f9d423; }
+
+    /* The Toggle Button Style (Round when open, pellet when closed) */
+    .sidebar-toggle-btn {
+      position: absolute;
+      top: 15px; /* Pushed down from top edge (Default/Open state) */
+      right: 15px; /* MOVED INSIDE the glass card */
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%; /* Round button when open */
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.5);
+      transition: all 0.3s ease;
+      z-index: 5;
+      /* Reset transforms for the open state */
+      transform: none;
+    }
+
+    .sidebar-toggle-btn i {
+      transition: none; /* No rotation for ellipsis icon */
+      font-size: 1rem;
+    }
+
+    /* Collapsed State Styles (Applied to BODY) */
+    .sidebar-collapsed #sidebar-panel {
+      width: 0;
+      min-width: 0;
+    }
+    .sidebar-collapsed #fileList {
+      opacity: 0; /* Hide content */
+      pointer-events: none; /* Disable interaction */
+      border: none;
+      background: transparent;
+      box-shadow: none;
+      transition: opacity 0.1s ease; /* Fade out faster */
+    }
+
+    /* Pellet/Oval Shape & Positioning when Collapsed */
+    .sidebar-collapsed .sidebar-toggle-btn {
+      /* Taller and less wide (Pellet shape) */
+      width: 30px;
+      height: 80px;
+      border-radius: 15px; /* Creates the pellet/oval shape */
+      /* Center vertically along the screen edge */
+      top: -50%
+      transform: translateY(-50%);
+      /* Push it out from the zero-width sidebar panel */
+      right: -15px;
+    }
+
+    .sidebar-collapsed .sidebar-toggle-btn i {
+      transform: none; /* Ensure no rotation on the ellipsis icon */
+    }
+
+    /* ===================== EDITOR CARD (Enhanced Glass) ===================== */
+    .editor-card {
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      /* Glass effect */
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      padding:22px;
+      min-height:600px;
+    }
+
+    /* ===================== TOOLBAR (CLEANER BUTTONS) ===================== */
+    .controls {
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-bottom:12px;
+      align-items:center;
+    }
+    .controls button, .controls select, .controls label {
+      border:none;
+      cursor:pointer;
+      transition:all 0.3s;
+      background: rgba(255,255,255,0.1);
+      color:white;
+      font-size:0.9rem;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+      border-radius: 10px; /* Uniform roundedness */
+    }
+
+    /* Style for Icon Buttons (Fixed size and centered) */
+    .controls button.icon-btn {
+      width: 40px;
+      height: 40px;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Style for Text Buttons (Export) */
+    .controls button:not(.icon-btn) {
+      padding: 8px 12px;
+    }
+
+    .controls button i { font-size:1.1rem; }
+
+    /* Hover effect for all interactive elements */
+    .controls button:hover, .controls select:hover, .controls label:hover {
+      background: linear-gradient(45deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15));
+      transform: scale(1.05); /* Slight scale on hover */
+      box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Styling for Selects (Font/Size) */
+    .controls select {
+      padding: 8px 10px;
+      appearance: none; /* Hide default arrow */
+      /* Custom SVG arrow */
+      background: rgba(255,255,255,0.1) url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e") no-repeat right 8px center;
+      background-size: 15px;
+      min-width: 120px;
+    }
+
+    /* Styling for Color Pickers (Hidden input, visible label) */
+    .controls label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      position: relative;
+    }
+    .controls input[type=color] {
+      opacity: 0; /* Hide native input */
+      width: 100%;
+      height: 100%;
+      padding: 0;
+      margin: 0;
+      border: none;
+      cursor: pointer;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    .controls label i {
+      font-size: 1.1rem;
+      pointer-events: none; /* Ensures the click targets the hidden input */
+    }
+
+    /* ===================== EDITOR ===================== */
+    #editor {
+      flex:1;
+      background: rgba(255,255,255,0.05);
+      border-radius:15px;
+      padding:20px;
+      font-size:16px;
+      outline:none;
+      overflow:auto;
+      word-wrap:break-word;
+      color:#f0f0f0;
+      min-height:400px;
+      line-height:1.5;
+    }
+
+    /* ===================== FLOATING BUTTON ===================== */
+    .floating-btn {
+      position:fixed;
+      bottom:30px;
+      right:30px;
+      width:60px;
+      height:60px;
+      border-radius:50%;
+      /* Background handled by .btn-blue class now */
+      color:white; /* Keep color white for visibility */
+      font-size:2rem;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      cursor:pointer;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transition: transform 0.2s;
+      z-index: 10;
+    }
+    .floating-btn:hover { transform: scale(1.1); }
+
+    /* ===================== SCROLLBAR ===================== */
+    #fileList::-webkit-scrollbar, #editor::-webkit-scrollbar{
+      width:8px;
+    }
+    #fileList::-webkit-scrollbar-thumb, #editor::-webkit-scrollbar-thumb{
+      background: rgba(255,255,255,0.3);
+      border-radius:4px;
+    }
+    #fileList::-webkit-scrollbar-track, #editor::-webkit-scrollbar-track{
+      background:transparent;
+    }
+
+    /* ===================== MODAL SYSTEM ===================== */
+    .modal {
+      position:fixed;
+      top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.7); /* Darker backdrop */
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      display:none;
+      z-index: 1000;
+    }
+    .modal .content{
+      background:#1e2a3a;
+      padding:30px;
+      border-radius:15px;
+      width:350px;
+      max-width:90%;
+      color:#fff;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .modal .content input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0 20px 0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.2);
+      color: white;
+      border-radius: 8px;
+      box-sizing: border-box;
+    }
+    .modal .content button {
+      margin-left: 10px;
+      background: linear-gradient(45deg, #ff4e50, #f9d423);
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s;
+    }
+    .modal .content button.cancel {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    .modal .content button:hover {
+      box-shadow: 0 2px 10px rgba(255, 78, 80, 0.4);
+      transform: translateY(-1px);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Quantum Docs</h1>
+</header>
+
+<div class="main-wrapper">
+
+  <!-- ===================== SIDEBAR PANEL ===================== -->
+  <div id="sidebar-panel">
+    <!-- The file list content -->
+    <div id="fileList"></div>
+
+    <!-- Sidebar Toggle Button (Now round and top-right positioned) -->
+    <button id="sidebarToggle" onclick="toggleSidebar()" class="sidebar-toggle-btn btn-blue">
+      <i class="fas fa-ellipsis-v"></i>
+    </button>
+  </div>
+
+
+  <!-- ===================== EDITOR CARD ===================== -->
+  <div class="editor-card">
+    <div class="controls">
+
+      <!-- Text formatting -->
+      <button class="icon-btn" onclick="applyStyle('bold')"><i class="fas fa-bold"></i></button>
+      <button class="icon-btn" onclick="applyStyle('italic')"><i class="fas fa-italic"></i></button>
+      <button class="icon-btn" onclick="applyStyle('underline')"><i class="fas fa-underline"></i></button>
+      <button class="icon-btn" onclick="applyStyle('strikeThrough')"><i class="fas fa-strikethrough"></i></button>
+
+      <!-- Alignment -->
+      <button class="icon-btn" onclick="applyStyle('justifyLeft')"><i class="fas fa-align-left"></i></button>
+      <button class="icon-btn" onclick="applyStyle('justifyCenter')"><i class="fas fa-align-center"></i></button>
+      <button class="icon-btn" onclick="applyStyle('justifyRight')"><i class="fas fa-align-right"></i></button>
+      <button class="icon-btn" onclick="applyStyle('justifyFull')"><i class="fas fa-align-justify"></i></button>
+
+      <!-- Font -->
+      <select id="fontSelect" onchange="applyFont(this.value)">
+        <option>Arial</option><option>Courier New</option><option>Times New Roman</option>
+        <option>Verdana</option><option>Georgia</option><option>Trebuchet MS</option>
+        <option>Lucida Console</option><option>Comic Sans MS</option><option>Garamond</option>
+        <option>Impact</option><option>Tahoma</option><option>Palatino</option>
+        <option>Calibri</option><option>Cambria</option><option>Monaco</option>
+        <option>Segoe UI</option><option>Merriweather</option><option>Noto Sans</option>
+        <option>Roboto</option><option>Open Sans</option>
+      </select>
+
+      <!-- Font size - Values updated to use execCommand index (1-7) -->
+      <select id="fontSizeSelect" onchange="applyFontSize(this.value)">
+        <option value="1">Smallest</option>
+        <option value="2">Extra Small</option>
+        <option value="3" selected>Small</option>
+        <option value="4">Normal</option>
+        <option value="5">Medium</option>
+        <option value="6">Large</option>
+        <option value="7">Largest</option>
+      </select>
+
+      <!-- Text color -->
+      <label class="icon-btn"><i class="fas fa-palette"></i><input type="color" id="colorPicker" onchange="applyColor(this.value)"></label>
+
+      <!-- Highlight -->
+      <label class="icon-btn"><i class="fas fa-highlighter"></i><input type="color" id="highlightPicker" onchange="applyHighlight(this.value)"></label>
+
+      <!-- Lists -->
+      <button class="icon-btn" onclick="applyStyle('insertOrderedList')"><i class="fas fa-list-ol"></i></button>
+      <button class="icon-btn" onclick="applyStyle('insertUnorderedList')"><i class="fas fa-list-ul"></i></button>
+
+      <!-- Insert link/image (Uses custom modal) -->
+      <button class="icon-btn" onclick="insertLink()"><i class="fas fa-link"></i></button>
+      <button class="icon-btn" onclick="insertImage()"><i class="fas fa-image"></i></button>
+
+      <!-- Undo/Redo -->
+      <button class="icon-btn" onclick="applyStyle('undo')"><i class="fas fa-undo"></i></button>
+      <button class="icon-btn" onclick="applyStyle('redo')"><i class="fas fa-redo"></i></button>
+
+      <!-- Export (Text buttons) -->
+      <button onclick="exportDoc('html')"><i class="fas fa-file-export"></i> HTML</button>
+      <button onclick="exportDoc('txt')"><i class="fas fa-file-export"></i> TXT</button>
+
+    </div>
+
+    <div id="editor" contenteditable="true">
+      <h2>Welcome to Quantum Docs</h2>
+      <p>This is a full-featured rich text editor. Use the toolbar to format text per word or line. **Select this text and click the 'Bold' icon to see it work!**</p>
+    </div>
+  </div>
+
+</div>
+
+<!-- Floating button (Uses custom modal) -->
+<div class="floating-btn btn-blue" onclick="newDoc()">+</div>
+
+<!-- Custom Reusable Modal -->
+<div id="customModal" class="modal">
+  <div class="content">
+    <h3 id="modalTitle"></h3>
+    <p id="modalMessage"></p>
+    <input type="text" id="modalInput">
+    <div style="text-align:right;">
+      <button class="cancel" id="modalCancel">Cancel</button>
+      <button id="modalConfirm">OK</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===================== GLOBALS =====================
+  let currentFile = null;
+  const editor = document.getElementById('editor');
+  const fileList = document.getElementById('fileList');
+
+  // IndexedDB constants
+  const DB_NAME = 'QuantumDocsDB';
+  const STORE_NAME = 'documents';
+  let db = null; // Will hold the IndexedDB connection
+  let isSidebarOpen = true; // Sidebar state
+
+  // ===================== SIDEBAR COLLAPSE LOGIC =====================
+  const sidebarToggle = document.getElementById('sidebarToggle');
+
+  function toggleSidebar() {
+    isSidebarOpen = !isSidebarOpen;
+    document.body.classList.toggle('sidebar-collapsed', !isSidebarOpen);
+
+    // Manage button colors
+    if (isSidebarOpen) {
+      sidebarToggle.classList.add('btn-blue');
+      sidebarToggle.classList.remove('btn-green');
+    } else {
+      sidebarToggle.classList.remove('btn-blue');
+      sidebarToggle.classList.add('btn-green');
+    }
+  }
+
+  // ===================== MODAL SYSTEM =====================
+  const customModal = document.getElementById('customModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalMessage = document.getElementById('modalMessage');
+  const modalInput = document.getElementById('modalInput');
+  const modalConfirm = document.getElementById('modalConfirm');
+  const modalCancel = document.getElementById('modalCancel');
+
+  // Generic function to display and handle modal interaction
+  function showModal(title, message, isPrompt, defaultValue = '') {
+    return new Promise(resolve => {
+      modalTitle.textContent = title;
+      modalMessage.textContent = message;
+
+      // Configure as prompt or confirmation
+      if (isPrompt) {
+        modalInput.style.display = 'block';
+        modalInput.value = defaultValue;
+        modalConfirm.textContent = 'Save';
+        modalInput.focus();
+      } else {
+        modalInput.style.display = 'none';
+        modalInput.value = '';
+        modalConfirm.textContent = 'Confirm';
+      }
+
+      // Event listener setup
+      const handleConfirm = () => {
+        customModal.style.display = 'none';
+        resolve(isPrompt ? modalInput.value : true);
+        cleanup();
+      };
+
+      const handleCancel = () => {
+        customModal.style.display = 'none';
+        resolve(isPrompt ? null : false);
+        cleanup();
+      };
+
+      const cleanup = () => {
+        modalConfirm.removeEventListener('click', handleConfirm);
+        modalCancel.removeEventListener('click', handleCancel);
+      };
+
+      modalConfirm.addEventListener('click', handleConfirm);
+      modalCancel.addEventListener('click', handleCancel);
+
+      customModal.style.display = 'flex';
+    });
+  }
+
+  // ===================== INDEXEDDB WRAPPER =====================
+
+  /**
+   * Opens the IndexedDB connection. Creates the object store if it doesn't exist.
+   */
+  function openDB() {
+    return new Promise((resolve, reject) => {
+      if (db) {
+        resolve(db);
+        return;
+      }
+
+      const request = indexedDB.open(DB_NAME, 1);
+
+      request.onupgradeneeded = (event) => {
+        const dbInstance = event.target.result;
+        // Create an object store where the document name is the key
+        dbInstance.createObjectStore(STORE_NAME);
+      };
+
+      request.onsuccess = (event) => {
+        db = event.target.result;
+        resolve(db);
+      };
+
+      request.onerror = (event) => {
+        console.error("IndexedDB error:", event.target.error);
+        reject("Error opening IndexedDB.");
+      };
+    });
+  }
+
+  /**
+   * Helper function to get an object store in a transaction.
+   */
+  function getStore(mode = 'readonly') {
+    if (!db) throw new Error("Database not initialized.");
+    const transaction = db.transaction([STORE_NAME], mode);
+    return transaction.objectStore(STORE_NAME);
+  }
+
+  // ===================== FILE MANAGEMENT (IndexedDB) =====================
+
+  /**
+   * Loads all document keys (names) from IndexedDB and populates the sidebar.
+   */
+  async function loadFiles(){
+    try {
+      await openDB();
+      fileList.innerHTML = '';
+
+      const keys = await new Promise((resolve, reject) => {
+        const request = getStore('readonly').getAllKeys();
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      for(const key of keys){
+        const div = document.createElement('div');
+        div.className='file-item';
+        div.innerHTML=`<span onclick="loadDoc('${key}')">${key}</span>
+          <div>
+          <button onclick="renameDoc('${key}',event)"><i class="fas fa-edit"></i></button>
+          <button onclick="deleteDoc('${key}',event)"><i class="fas fa-trash"></i></button>
+          </div>`;
+        fileList.appendChild(div);
+      }
+      if (!currentFile && keys.length > 0) {
+        // Load the first document if none is active
+        await loadDoc(keys[0]);
+      }
+    } catch (error) {
+      console.error("Failed to load files:", error);
+    }
+  }
+
+  /**
+   * Creates a new document and saves it to IndexedDB.
+   */
+  async function newDoc(){
+    const name = await showModal("New Document", "Enter a name for your new document:", true, "Untitled Doc");
+    if(!name) return;
+    currentFile = name;
+    editor.innerHTML = '<h2>Untitled Document</h2><p>Start writing here...</p>';
+    await saveDoc();
+  }
+
+  /**
+   * Saves the current editor content to IndexedDB using currentFile as the key.
+   */
+  async function saveDoc(){
+    if(!currentFile){ console.error("Error: No file selected to save."); return;}
+    try {
+      await openDB();
+      const content = editor.innerHTML;
+      await new Promise((resolve, reject) => {
+        const request = getStore('readwrite').put(content, currentFile);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+      loadFiles(); // Reload sidebar to show updates
+    } catch (error) {
+      console.error("Failed to save document:", error);
+    }
+  }
+
+  /**
+   * Loads content from IndexedDB into the editor.
+   */
+  async function loadDoc(name){
+    try {
+      await openDB();
+      const content = await new Promise((resolve, reject) => {
+        const request = getStore('readonly').get(name);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      currentFile = name;
+      editor.innerHTML = content || '';
+      editor.focus();
+    } catch (error) {
+      console.error("Failed to load document:", error);
+    }
+  }
+
+  /**
+   * Deletes a document from IndexedDB after confirmation.
+   */
+  async function deleteDoc(name, event){
+    event.stopPropagation();
+    const confirmed = await showModal("Delete Document", `Are you sure you want to delete "${name}"?`, false);
+    if(!confirmed) return;
+
+    try {
+      await openDB();
+      await new Promise((resolve, reject) => {
+        const request = getStore('readwrite').delete(name);
+        request.onsuccess = () => resolve();
+        request.onerror = () => reject(request.error);
+      });
+
+      if(currentFile === name) {
+        currentFile = null;
+        editor.innerHTML = '';
+      }
+      loadFiles();
+    } catch (error) {
+      console.error("Failed to delete document:", error);
+    }
+  }
+
+  /**
+   * Renames a document by fetching its content, deleting the old key, and saving under the new key.
+   */
+  async function renameDoc(oldName, event){
+    event.stopPropagation();
+    const newName = await showModal("Rename Document", "Enter the new name for the document:", true, oldName);
+    if(!newName || newName === oldName) return;
+
+    try {
+      await openDB();
+
+      // 1. Get content
+      const content = await new Promise((resolve, reject) => {
+        const request = getStore('readonly').get(oldName);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+
+      if (content === undefined) return; // Doc not found
+
+      // 2. Perform delete and put in a single transaction
+      const transaction = db.transaction([STORE_NAME], 'readwrite');
+      const store = transaction.objectStore(STORE_NAME);
+
+      await new Promise((resolve, reject) => {
+        const deleteRequest = store.delete(oldName);
+        deleteRequest.onsuccess = () => {
+          const putRequest = store.put(content, newName);
+          putRequest.onsuccess = () => resolve();
+          putRequest.onerror = (e) => reject(e);
+        };
+        deleteRequest.onerror = (e) => reject(e);
+      });
+
+      if(currentFile === oldName) currentFile = newName;
+      loadFiles();
+    } catch (error) {
+      console.error("Failed to rename document:", error);
+    }
+  }
+
+  // ===================== INLINE FORMATTING =====================
+
+  // Generic style application, ensuring focus is maintained
+  function applyStyle(cmd){
+    editor.focus();
+    document.execCommand(cmd,false,null);
+    // Auto-save the document immediately after applying a style
+    if (currentFile) saveDoc();
+  }
+
+  // Apply Font Name
+  function applyFont(font){
+    document.execCommand("fontName",false,font);
+    editor.focus();
+    if (currentFile) saveDoc();
+  }
+
+  // Apply Font Size
+  function applyFontSize(index){
+    document.execCommand("fontSize",false,index);
+    editor.focus();
+    if (currentFile) saveDoc();
+  }
+
+  // Apply Text Color
+  function applyColor(color){
+    document.execCommand("foreColor",false,color);
+    editor.focus();
+    if (currentFile) saveDoc();
+  }
+
+  // Apply Text Highlight (Background Color)
+  function applyHighlight(color){
+    document.execCommand("backColor",false,color);
+    editor.focus();
+    if (currentFile) saveDoc();
+  }
+
+  // ===================== INSERT LINK & IMAGE (Using custom modal) =====================
+  async function insertLink(){
+    const url=await showModal("Insert Link", "Enter the URL for the link:", true, 'https://');
+    if(!url) return;
+    document.execCommand('createLink',false,url);
+    editor.focus();
+    if (currentFile) saveDoc();
+  }
+
+  async function insertImage(){
+    const url=await showModal("Insert Image", "Enter the URL for the image:", true, 'https://placehold.co/400x200/243b55/fff?text=Placeholder');
+    if(!url) return;
+    document.execCommand('insertImage',false,url);
+    editor.focus();
+    if (currentFile) saveDoc();
+  }
+
+  // ===================== EXPORT =====================
+  function exportDoc(type='html'){
+    let content = type==='html'?editor.innerHTML:editor.innerText;
+    const blob=new Blob([content],{type:type==='html'?'text/html':'text/plain'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='QuantumDoc.'+(type==='html'?'html':'txt');
+    a.click();
+  }
+
+  // ===================== REALTIME TOOLBAR UPDATE =====================
+  function updateToolbar(){
+    // In a production environment, this would update the toolbar state based on the current selection.
+    // For this demonstration, we'll keep it simple but ensure saveDoc is called.
+    if (currentFile) saveDoc();
+  }
+  editor.addEventListener('input', updateToolbar); // Use 'input' for content changes
+  editor.addEventListener('mouseup', updateToolbar);
+
+  // ===================== INITIAL LOAD =====================
+  window.onload = loadFiles;
+</script>
+
+</body>
+</html>

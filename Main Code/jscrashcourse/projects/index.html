@@ -1,0 +1,103 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="styles.css">
+    <title>JS Test Enviornment</title>
+</head>
+
+<body>
+    <header>
+        <h1>JS Test Enviornment</h1>
+    </header>
+    <button onclick="deityQuiz()" class ="btn btn-green">Deity Quiz</button>
+</body>
+
+<script>
+    function format(n) {
+        return n.trim().toLowerCase()
+    }
+
+    function deityQuiz() {
+        const diversion1 = format(prompt("Established or Risk?"))
+        if (diversion1 !== "established" && diversion1 !== "risk") {
+            alert("Invalid result")
+        }
+        else if (diversion1 === "established") {
+            const diversion2 = format(prompt("Peace or Power?"))
+            if (diversion2 !== "peace" && diversion2 !== "power") {
+                alert("Invalid result")
+            }
+            else if (diversion2 === "power") {
+                alert("Your result is Shiva.")
+            }
+            else {
+                const diversion3 = format(prompt("Preserve or Create?"))
+                if (diversion3 !== "preserve" && diversion3 !== "create") {
+                    alert("Invalid result")
+                }
+                else if (diversion3 === "preserve") {
+                    alert("Your result is Vishnu.")
+                }
+                else {
+                    alert("Your result is Bhrama.")
+                }
+            }
+        }
+        else {
+            const diversion4 = format(prompt("Moon, Death, or Sun?"))
+            if (diversion4 !== "moon" && diversion4 !== "death" && diversion4 !== "sun") {
+                alert("Invalid result")
+            }
+            else if (diversion4 === "death") {
+                alert("Your result is Yamaraja.")
+            }
+            else if (diversion4 === "sun") {
+                const diversion5 = format(prompt("Mixed or Pure Sun?"))
+                if (diversion5 !== "mixed" && diversion5 !== "pure sun") {
+                    alert("Invalid result")
+                }
+                else if (diversion5 === "pure sun") {
+                    alert("Your result is Surya.")
+                }
+                else {
+                    const diversion6 = format(prompt("Wind, Water, or Fire?"))
+                    if (diversion6 !== "wind" && diversion6 !== "water" && diversion6 !== "fire") {
+                        alert("Invalid result")
+                    }
+                    else if (diversion6 === "wind") {
+                        alert("Your result is Vayu.")
+                    }
+                    else if (diversion6 === "water") {
+                        alert("Your result is Varuna.")
+                    }
+                    else {
+                        alert("Your result is Agni.")
+                    }
+                }
+            }
+            else {
+                diversion7 = format(prompt("Mixed or Pure Moon?"))
+                if (diversion7 !== "mixed" && diversion7 !== "pure moon") {
+                    alert("Invalid result")
+                }
+                else if (diversion7 === "pure moon") {
+                    alert("Your result is Chandra.")
+                }
+                else {
+                    diversion8 = format(prompt("Karma or King?"))
+                    if (diversion8 !== "karma" && diversion8 !== "king") {
+                        alert("Invalid result")
+                    }
+                    else if (diversion8 === "karma") {
+                        alert("Your result is Shani.")
+                    }
+                    else {
+                        alert("Your result is Indra.")
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+</html>

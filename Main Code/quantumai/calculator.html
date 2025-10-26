@@ -1,0 +1,1006 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Quantum Calculator ✧</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        /* --- Base (from user's provided file with additions) --- */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        header h1 {
+            font-size: 3em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        .card {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+            padding: 22px;
+            max-width: 1100px;
+            width: 100%;
+            animation: fadeIn 0.6s ease;
+            text-align: center;
+        }
+
+        .card h2 {
+            font-size: 1.6em;
+            margin-bottom: 8px;
+            background: linear-gradient(270deg, #ff7e5f, #feb47b);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        .top-row {
+            display:flex;
+            gap:12px;
+            align-items:center;
+            justify-content:space-between;
+            margin-bottom:12px;
+        }
+
+        .modes {
+            display:flex;
+            gap:10px;
+            flex-wrap:wrap;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 18px;
+            margin: 4px;
+            font-size: 0.95em;
+            font-weight: 500;
+            border-radius: 20px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.18s;
+            color: white;
+            background: rgba(255,255,255,0.05);
+        }
+
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.4); }
+
+        .btn-blue {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+        .btn-green {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        .display {
+            background: rgba(0,0,0,0.35);
+            border-radius: 12px;
+            padding: 14px;
+            text-align: right;
+            font-size: 1.6em;
+            min-height:58px;
+            margin-bottom:12px;
+            overflow-wrap:anywhere;
+        }
+
+        .sub-display {
+            color: #cbd5e1;
+            font-size:0.9em;
+            text-align:left;
+            margin-bottom:8px;
+            min-height:20px;
+        }
+
+        .grid {
+            display:grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap:8px;
+        }
+
+        .grid .key {
+            background: rgba(255,255,255,0.03);
+            padding:12px;
+            border-radius:10px;
+            cursor:pointer;
+            user-select:none;
+        }
+        .grid .key:hover { transform: translateY(-3px); box-shadow: 0 5px 16px rgba(0,0,0,0.4); }
+
+        .functions {
+            display:flex;
+            gap:8px;
+            margin-top:12px;
+            flex-wrap:wrap;
+            justify-content:center;
+        }
+
+        .side {
+            margin-top: 16px;
+            display:flex;
+            gap:12px;
+            align-items:flex-start;
+            justify-content:space-between;
+        }
+
+        .column {
+            width: 48%;
+            text-align:left;
+        }
+
+        .panel {
+            background: rgba(255,255,255,0.02);
+            padding:12px;
+            border-radius:12px;
+            max-height:420px;
+            overflow:auto;
+        }
+
+        .history-item {
+            padding:6px 8px;
+            border-radius:8px;
+            margin-bottom:6px;
+            background: rgba(255,255,255,0.02);
+            font-size:0.95em;
+        }
+
+        /* Graph canvas */
+        #graphCanvas {
+            width:100%;
+            height:320px;
+            background: linear-gradient(180deg, rgba(255,255,255,0.015), rgba(0,0,0,0.08));
+            border-radius:10px;
+            border: 1px solid rgba(255,255,255,0.03);
+        }
+
+        /* AI chat */
+        .chat {
+            display:flex;
+            flex-direction:column;
+            gap:8px;
+        }
+        .message {
+            padding:8px 12px;
+            border-radius:12px;
+            max-width:88%;
+        }
+        .user { align-self:flex-end; background: linear-gradient(90deg,#667eea,#764ba2); }
+        .bot { align-self:flex-start; background: rgba(255,255,255,0.03); color:#e6eef8; }
+
+        .small { font-size:0.9em; color:#cbd5e1; }
+
+        input[type="text"], textarea {
+            width:100%;
+            padding:8px 10px;
+            border-radius:8px;
+            border:1px solid rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.02);
+            color:white;
+            outline:none;
+        }
+
+        select, label { font-size:0.95em; }
+
+        footer { margin-top:14px; font-size:0.9em; color:#d1e7ff; opacity:0.9; text-align:center;}
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @media (max-width:900px){
+            .side { flex-direction:column; }
+            .column { width:100% }
+            .grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+<header><h1>Quantum Calculator</h1></header>
+
+<main class="card" role="main" aria-label="Advanced Calculator">
+    <div class="top-row">
+        <div>
+            <h2 id="modeTitle">Standard Mode</h2>
+            <div class="small">Accurate client-side math, graphing, and a built-in math assistant.</div>
+        </div>
+
+        <div class="modes" role="tablist" aria-label="Calculator modes">
+            <button class="btn btn-blue" data-mode="standard">Standard</button>
+            <button class="btn" data-mode="scientific">Scientific</button>
+            <button class="btn" data-mode="programmer">Programmer</button>
+            <button class="btn" data-mode="graphing">Graphing</button>
+            <button class="btn btn-green" data-mode="ai">AI Helper</button>
+        </div>
+    </div>
+
+    <div class="display" id="display">0</div>
+    <div class="sub-display" id="subDisplay">&nbsp;</div>
+
+    <!-- Buttons / keypad -->
+    <div id="standardPanel" class="panel">
+        <div id="standardControls">
+            <div class="grid" id="keyGrid">
+                <!-- Grid keys inserted by JS for modularity -->
+            </div>
+
+            <div class="functions" id="funcRow">
+                <button class="btn" id="btnClear">C</button>
+                <button class="btn" id="btnAllClear">AC</button>
+                <button class="btn" id="btnUndo">⌫</button>
+                <button class="btn" id="btnAns">Ans</button>
+                <button class="btn btn-blue" id="btnEqual">=</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="side">
+        <div class="column">
+            <div class="panel" aria-live="polite">
+                <!-- Mode-specific content -->
+                <div id="scientificPanel" style="display:none;">
+                    <label>Functions (click to insert):</label>
+                    <div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;">
+                        <button class="btn" data-insert="sin(">sin</button>
+                        <button class="btn" data-insert="cos(">cos</button>
+                        <button class="btn" data-insert="tan(">tan</button>
+                        <button class="btn" data-insert="asin(">asin</button>
+                        <button class="btn" data-insert="acos(">acos</button>
+                        <button class="btn" data-insert="atan(">atan</button>
+                        <button class="btn" data-insert="sqrt(">sqrt</button>
+                        <button class="btn" data-insert="log(">ln</button>
+                        <button class="btn" data-insert="log10(">log10</button>
+                        <button class="btn" data-insert="exp(">exp</button>
+                        <button class="btn" data-insert="pi">π</button>
+                        <button class="btn" data-insert="e">e</button>
+                        <button class="btn" id="btnPow">^</button>
+                    </div>
+                </div>
+
+                <div id="programmerPanel" style="display:none;">
+                    <label>Programmer tools:</label>
+                    <div style="margin-top:8px; display:flex; gap:8px; flex-wrap:wrap;">
+                        <button class="btn" id="toBin">to binary</button>
+                        <button class="btn" id="toHex">to hex</button>
+                        <button class="btn" id="toOct">to octal</button>
+                        <button class="btn" id="fromBin">bin → dec</button>
+                        <button class="btn" id="fromHex">hex → dec</button>
+                        <button class="btn" id="bitAnd">AND</button>
+                        <button class="btn" id="bitOr">OR</button>
+                        <button class="btn" id="bitXor">XOR</button>
+                    </div>
+                    <div style="margin-top:10px;">
+                        <label>Enter integer:</label>
+                        <input id="progInput" type="text" value="42" />
+                    </div>
+                </div>
+
+                <div id="graphingPanel" style="display:none;">
+                    <label>Graph y =</label>
+                    <input id="graphExpr" type="text" placeholder="e.g. sin(x) + x/2" value="sin(x)" />
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <label>From <input id="xMin" type="text" value="-10" style="width:70px" /> to <input id="xMax" type="text" value="10" style="width:70px" /></label>
+                        <label>Samples <input id="samples" type="number" value="800" min="50" max="5000" style="width:90px" /></label>
+                        <button class="btn btn-blue" id="btnPlot">Plot</button>
+                    </div>
+                    <canvas id="graphCanvas" width="800" height="320"></canvas>
+                    <div class="small" style="margin-top:8px;">Tip: use functions like sin(x), cos(x), tan(x), sqrt(x), log(x) (ln), exp(x).</div>
+                </div>
+
+                <div id="aiPanel" style="display:none;">
+                    <label>Math Assistant — ask a math question or paste a word problem.</label>
+                    <div id="chat" class="chat" style="margin-top:8px;"></div>
+                    <div style="display:flex;gap:8px;margin-top:8px;">
+                        <input id="aiInput" type="text" placeholder="e.g. 'Solve 2x+3=7' or 'What is the integral of x^2?' or 'Help me with this word problem...'" />
+                        <button class="btn btn-green" id="aiSend">Ask</button>
+                    </div>
+                    <div class="small" style="margin-top:8px">This bot only does math — arithmetic, algebra, equations, numeric solving, step hints, and parsing simple word problems.</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="column">
+            <div class="panel">
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <strong>History</strong>
+                    <button class="btn" id="btnClearHistory">Clear</button>
+                </div>
+                <div id="historyList" style="margin-top:8px;"></div>
+
+                <hr style="border-color:rgba(255,255,255,0.03);margin:12px 0" />
+
+                <div>
+                    <strong>Last answer</strong>
+                    <div id="lastAnswer" class="small" style="margin-top:6px;">&nbsp;</div>
+                </div>
+
+                <hr style="border-color:rgba(255,255,255,0.03);margin:12px 0" />
+
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <button class="btn" id="btnCopy">Copy Result</button>
+                    <button class="btn" id="btnExport">Export History (JSON)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>Built-in math parser • safe client-side evaluator • graphing & numeric solver</footer>
+</main>
+
+<script>
+    /* ------------------------
+       Expression parser & evaluator (shunting-yard -> RPN)
+       Supports: + - * / ^ parentheses, functions: sin cos tan asin acos atan sqrt log log10 exp abs pow
+       Variables: x
+       All implemented WITHOUT eval for safety.
+       ------------------------ */
+
+    (() => {
+        // Tokenizer
+        function tokenize(expr) {
+            expr = String(expr).replace(/÷/g, '/').replace(/×/g, '*').replace(/—/g, '-').replace(/\u2212/g,'-');
+            const tokens = [];
+            const re = /\s*([A-Za-z_][A-Za-z0-9_]*|\d+\.\d+|\d+|\.\d+|==|!=|<=|>=|[+\-*/^()%=,])\s*/g;
+            let m;
+            let lastIndex = 0;
+            while ((m = re.exec(expr)) !== null) {
+                if (m.index !== lastIndex) {
+                    // detect unknown chars
+                    const stray = expr.slice(lastIndex, m.index).trim();
+                    if (stray) tokens.push(stray);
+                }
+                tokens.push(m[1]);
+                lastIndex = re.lastIndex;
+            }
+            if (lastIndex < expr.length) {
+                const stray = expr.slice(lastIndex).trim();
+                if (stray) tokens.push(stray);
+            }
+            return tokens;
+        }
+
+        const FUNCTIONS = {
+            'sin': Math.sin, 'cos': Math.cos, 'tan': Math.tan,
+            'asin': Math.asin, 'acos': Math.acos, 'atan': Math.atan,
+            'sqrt': Math.sqrt, 'abs': Math.abs,
+            'log': Math.log, // natural log
+            'log10': Math.log10 || ((v)=>Math.log(v)/Math.LN10),
+            'exp': Math.exp,
+            'pow': Math.pow,
+            'min': Math.min, 'max': Math.max,
+        };
+
+        const CONSTANTS = { 'pi': Math.PI, 'π': Math.PI, 'e': Math.E };
+
+        function toRPN(tokens) {
+            const output = [];
+            const ops = [];
+            const prec = { '+':2, '-':2, '*':3, '/':3, '^':4 };
+            const rightAssoc = { '^':true };
+            for (let i=0;i<tokens.length;i++) {
+                const t = tokens[i];
+                if (!isNaN(Number(t))) {
+                    output.push({type:'number', value: Number(t)});
+                } else if (t in CONSTANTS) {
+                    output.push({type:'number', value: CONSTANTS[t]});
+                } else if (/^[A-Za-z_][A-Za-z0-9_]*$/.test(t)) {
+                    // might be variable or function
+                    if (i+1 < tokens.length && tokens[i+1] === '(') {
+                        ops.push({type:'func', value:t});
+                    } else {
+                        output.push({type:'variable', value:t});
+                    }
+                } else if (t === ',') {
+                    while (ops.length && ops[ops.length-1].value !== '(') {
+                        output.push(ops.pop());
+                    }
+                    if (!ops.length) throw new Error("Misplaced comma or parentheses");
+                } else if (['+','-','*','/','^'].includes(t)) {
+                    while (ops.length) {
+                        const top = ops[ops.length-1];
+                        if (top.value === '(') break;
+                        const topPrec = prec[top.value] || 0;
+                        const curPrec = prec[t] || 0;
+                        if ((topPrec > curPrec) || (topPrec === curPrec && !rightAssoc[t])) {
+                            output.push(ops.pop());
+                        } else break;
+                    }
+                    ops.push({type:'op', value:t});
+                } else if (t === '(') {
+                    ops.push({value:'('});
+                } else if (t === ')') {
+                    while (ops.length && ops[ops.length-1].value !== '(') {
+                        output.push(ops.pop());
+                    }
+                    if (!ops.length) throw new Error("Mismatched parentheses");
+                    ops.pop(); // pop '('
+                    if (ops.length && ops[ops.length-1].type === 'func') {
+                        output.push(ops.pop());
+                    }
+                } else {
+                    throw new Error("Unknown token: " + t);
+                }
+            }
+            while (ops.length) {
+                const op = ops.pop();
+                if (op.value === '(' || op.value === ')') throw new Error("Mismatched parentheses");
+                output.push(op);
+            }
+            return output;
+        }
+
+        function evaluateRPN(rpn, vars = {}) {
+            const stack = [];
+            for (const node of rpn) {
+                if (node.type === 'number') stack.push(node.value);
+                else if (node.type === 'variable') {
+                    if (node.value in vars) stack.push(vars[node.value]);
+                    else throw new Error("Unknown variable: " + node.value);
+                } else if (node.type === 'op') {
+                    const b = stack.pop();
+                    const a = stack.pop();
+                    if (a === undefined || b === undefined) throw new Error("Malformed expression");
+                    switch(node.value) {
+                        case '+': stack.push(a+b); break;
+                        case '-': stack.push(a-b); break;
+                        case '*': stack.push(a*b); break;
+                        case '/': stack.push(a/b); break;
+                        case '^': stack.push(Math.pow(a,b)); break;
+                        default: throw new Error("Unsupported op " + node.value);
+                    }
+                } else if (node.type === 'func') {
+                    const fnName = node.value;
+                    const arg = stack.pop();
+                    if (arg === undefined) throw new Error("Missing argument for " + fnName);
+                    if (fnName in FUNCTIONS) {
+                        stack.push(FUNCTIONS[fnName](arg));
+                    } else {
+                        throw new Error("Unknown function " + fnName);
+                    }
+                } else {
+                    throw new Error("Unexpected RPN node");
+                }
+            }
+            if (stack.length !== 1) throw new Error("Malformed expression");
+            return stack[0];
+        }
+
+        function parseAndEval(expr, vars={}) {
+            const tokens = tokenize(expr);
+            const rpn = toRPN(tokens);
+            return evaluateRPN(rpn, vars);
+        }
+
+        /* ------------------------
+           UI & Mode logic
+           ------------------------ */
+        const modes = { standard: true, scientific:false, programmer:false, graphing:false, ai:false };
+        let currentMode = 'standard';
+        let currentInput = '';
+        let lastAns = 0;
+        const history = [];
+
+        const display = document.getElementById('display');
+        const subDisplay = document.getElementById('subDisplay');
+        const modeTitle = document.getElementById('modeTitle');
+
+        function setMode(mode) {
+            currentMode = mode;
+            Object.keys(modes).forEach(m => modes[m] = false);
+            modes[mode] = true;
+            document.querySelectorAll('[data-mode]').forEach(btn => {
+                btn.classList.toggle('btn-blue', btn.dataset.mode === mode);
+            });
+            // panels
+            document.getElementById('scientificPanel').style.display = (mode === 'scientific') ? '' : 'none';
+            document.getElementById('programmerPanel').style.display = (mode === 'programmer') ? '' : 'none';
+            document.getElementById('graphingPanel').style.display = (mode === 'graphing') ? '' : 'none';
+            document.getElementById('aiPanel').style.display = (mode === 'ai') ? '' : 'none';
+            modeTitle.innerText = (mode.charAt(0).toUpperCase()+mode.slice(1)) + ' Mode';
+        }
+
+        document.querySelectorAll('[data-mode]').forEach(btn => {
+            btn.addEventListener('click', ()=>setMode(btn.dataset.mode));
+        });
+
+        // keypad setup for standard
+        const keys = [
+            '7','8','9','(',')','%',
+            '4','5','6','*','/','^',
+            '1','2','3','+','-','ANS',
+            '0','.','pi','e','x','ENTER'
+        ];
+        const keyGrid = document.getElementById('keyGrid');
+        keys.forEach(k => {
+            const el = document.createElement('div');
+            el.className = 'key';
+            el.innerText = k;
+            el.dataset.key = k;
+            el.addEventListener('click', () => handleKey(k));
+            keyGrid.appendChild(el);
+        });
+
+        function refreshDisplay() {
+            display.innerText = currentInput || '0';
+        }
+
+        function pushToHistory(expr, result) {
+            const item = {expr, result, time: new Date().toISOString()};
+            history.unshift(item);
+            renderHistory();
+            document.getElementById('lastAnswer').innerText = String(result);
+            lastAns = result;
+        }
+
+        function renderHistory() {
+            const el = document.getElementById('historyList');
+            el.innerHTML = '';
+            history.slice(0,50).forEach(h => {
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `<div style="font-weight:600">${escapeHtml(h.expr)}</div><div class="small">${escapeHtml(String(h.result))} · <span style="opacity:0.7">${new Date(h.time).toLocaleString()}</span></div>`;
+                div.addEventListener('click', ()=> {
+                    currentInput = h.expr;
+                    refreshDisplay();
+                });
+                el.appendChild(div);
+            });
+        }
+
+        function escapeHtml(s) {
+            return String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
+        }
+
+        // Key handling
+        function handleKey(key) {
+            if (key === 'ENTER' || key === 'ANS') {
+                if (key === 'ANS') insert('Ans');
+                else evaluateCurrent();
+                return;
+            }
+            if (key === 'pi') insert('pi');
+            else if (key === 'e') insert('e');
+            else if (key === '%') insert('/100');
+            else insert(key);
+        }
+
+        function insert(text) {
+            // 'Ans' token replaced with lastAns at eval time, but show visibly as 'Ans'
+            currentInput = (currentInput || '') + text;
+            refreshDisplay();
+        }
+
+        document.getElementById('btnClear').addEventListener('click', ()=> { currentInput=''; refreshDisplay(); });
+        document.getElementById('btnAllClear').addEventListener('click', ()=> { currentInput=''; history.length=0; renderHistory(); document.getElementById('lastAnswer').innerText=''; refreshDisplay(); });
+        document.getElementById('btnUndo').addEventListener('click', ()=> { currentInput = currentInput.slice(0,-1); refreshDisplay(); });
+        document.getElementById('btnEqual').addEventListener('click', evaluateCurrent);
+        document.getElementById('btnAns').addEventListener('click', ()=> insert('Ans'));
+
+        function evaluateCurrent() {
+            if (!currentInput) return;
+            try {
+                const exprToEval = currentInput.replace(/\bAns\b/g, String(lastAns));
+                const result = parseAndEval(preprocessForParser(exprToEval));
+                pushToHistory(currentInput, result);
+                currentInput = String(result);
+                refreshDisplay();
+                subDisplay.innerText = exprToEval + ' = ' + result;
+            } catch (err) {
+                subDisplay.innerText = 'Error: ' + (err.message || err);
+            }
+        }
+
+        function preprocessForParser(s) {
+            // Convert common notations to parser-friendly tokens:
+            // allow implicit multiplication like 2pi -> 2*pi or 2x -> 2*x
+            return s.replace(/([0-9])\s*([A-Za-z(π])/g, '$1*$2')
+                .replace(/([A-Za-zπ])\s*([0-9(π])/g, '$1*$2')
+                .replace(/%/g, '/100');
+        }
+
+        // function buttons insertion
+        document.querySelectorAll('[data-insert]').forEach(b => b.addEventListener('click', ()=> {
+            insert(b.dataset.insert);
+            refreshDisplay();
+        }));
+
+        document.getElementById('btnPow').addEventListener('click', ()=> insert('^'));
+
+        // Programmer tools
+        const progInput = document.getElementById('progInput');
+        document.getElementById('toBin').addEventListener('click', ()=> {
+            const n = Number(progInput.value);
+            alert(isNaN(n) ? 'Not a number' : 'binary: ' + (n>>>0).toString(2));
+        });
+        document.getElementById('toHex').addEventListener('click', ()=> {
+            const n = Number(progInput.value);
+            alert(isNaN(n) ? 'Not a number' : 'hex: ' + (n>>>0).toString(16));
+        });
+        document.getElementById('toOct').addEventListener('click', ()=> {
+            const n = Number(progInput.value);
+            alert(isNaN(n) ? 'Not a number' : 'octal: ' + (n>>>0).toString(8));
+        });
+        document.getElementById('fromBin').addEventListener('click', ()=> {
+            const v = progInput.value.trim();
+            try { alert('dec: ' + parseInt(v,2)); } catch(e){ alert('invalid'); }
+        });
+        document.getElementById('fromHex').addEventListener('click', ()=> {
+            const v = progInput.value.trim();
+            try { alert('dec: ' + parseInt(v,16)); } catch(e){ alert('invalid'); }
+        });
+        document.getElementById('bitAnd').addEventListener('click', ()=> bitOp('and'));
+        document.getElementById('bitOr').addEventListener('click', ()=> bitOp('or'));
+        document.getElementById('bitXor').addEventListener('click', ()=> bitOp('xor'));
+        function bitOp(op) {
+            try {
+                const parts = progInput.value.split(/\s+/).filter(Boolean);
+                if (parts.length<2) { alert('Enter two ints separated by space'); return; }
+                const a = parseInt(parts[0],10), b = parseInt(parts[1],10);
+                if (isNaN(a) || isNaN(b)) { alert('invalid ints'); return; }
+                let r=0;
+                if (op === 'and') r = a & b;
+                if (op === 'or') r = a | b;
+                if (op === 'xor') r = a ^ b;
+                alert('result: ' + r);
+            } catch(e) { alert('error'); }
+        }
+
+        // History controls
+        document.getElementById('btnClearHistory').addEventListener('click', ()=> { history.length=0; renderHistory(); });
+
+        document.getElementById('btnCopy').addEventListener('click', ()=> {
+            const t = document.getElementById('lastAnswer').innerText;
+            if (!t) return alert('No result to copy');
+            navigator.clipboard?.writeText(t).then(()=> alert('Copied'), ()=> alert('Could not copy'));
+        });
+
+        document.getElementById('btnExport').addEventListener('click', ()=> {
+            const blob = new Blob([JSON.stringify(history, null, 2)], {type:'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url; a.download = 'calc-history.json'; a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        /* ------------------------
+           Graphing
+           ------------------------ */
+        const graphCanvas = document.getElementById('graphCanvas');
+        const gctx = graphCanvas.getContext('2d');
+
+        function clearGraph() {
+            gctx.clearRect(0,0,graphCanvas.width, graphCanvas.height);
+        }
+
+        function plotFunction(expr, xmin, xmax, samples=800) {
+            clearGraph();
+            // background grid
+            const w = graphCanvas.width, h = graphCanvas.height;
+            gctx.fillStyle = 'rgba(0,0,0,0.0)';
+            gctx.fillRect(0,0,w,h);
+            // axes
+            const xs = xmin, xe = xmax;
+            const xRange = xe - xs;
+            // sample points
+            const xsArr = new Float64Array(samples);
+            const ysArr = new Float64Array(samples);
+            let ymin = Infinity, ymax = -Infinity;
+            for (let i=0;i<samples;i++) {
+                const x = xs + (i/(samples-1))*xRange;
+                xsArr[i] = x;
+                try {
+                    const y = parseAndEval(preprocessForParser(expr), {x});
+                    ysArr[i] = isFinite(y) ? y : NaN;
+                    if (isFinite(y)) { ymin = Math.min(ymin,y); ymax = Math.max(ymax,y); }
+                } catch(e) { ysArr[i] = NaN; }
+            }
+            if (!isFinite(ymin) || !isFinite(ymax)) { ymin = -1; ymax = 1; }
+            // pad
+            const pad = (ymax - ymin) * 0.1 || 1;
+            ymin -= pad; ymax += pad;
+            // transform
+            function tx(x) { return Math.round((x - xs) / (xe - xs) * w); }
+            function ty(y) { return Math.round(h - ( (y - ymin) / (ymax - ymin) * h)); }
+
+            // gridlines
+            gctx.strokeStyle = 'rgba(255,255,255,0.04)';
+            gctx.lineWidth = 1;
+            gctx.beginPath();
+            for (let gx = Math.ceil(xs); gx<=Math.floor(xe); gx++) {
+                const px = tx(gx);
+                gctx.moveTo(px,0); gctx.lineTo(px,h);
+            }
+            gctx.stroke();
+
+            // axes (x=0,y=0)
+            gctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            gctx.beginPath();
+            const x0 = (xs<=0 && xe>=0) ? tx(0) : null;
+            if (x0 !== null) { gctx.moveTo(x0,0); gctx.lineTo(x0,h); }
+            const y0 = (ymin<=0 && ymax>=0) ? ty(0) : null;
+            if (y0 !== null) { gctx.moveTo(0,y0); gctx.lineTo(w,y0); }
+            gctx.stroke();
+
+            // draw curve
+            gctx.beginPath();
+            gctx.strokeStyle = 'rgba(66, 185, 131, 0.95)';
+            gctx.lineWidth = 2;
+            let started = false;
+            for (let i=0;i<samples;i++) {
+                const xv = xsArr[i], yv = ysArr[i];
+                if (!isFinite(yv) || isNaN(yv)) { started = false; continue; }
+                const px = tx(xv), py = ty(yv);
+                if (!started) { gctx.moveTo(px,py); started = true; } else gctx.lineTo(px,py);
+            }
+            gctx.stroke();
+
+            // title
+            gctx.fillStyle = 'rgba(255,255,255,0.8)';
+            gctx.font = '12px system-ui, -apple-system';
+            gctx.fillText('y = ' + expr, 8, 16);
+        }
+
+        document.getElementById('btnPlot').addEventListener('click', ()=> {
+            const expr = document.getElementById('graphExpr').value || '';
+            const xmin = Number(document.getElementById('xMin').value);
+            const xmax = Number(document.getElementById('xMax').value);
+            const samples = Number(document.getElementById('samples').value) || 800;
+            try {
+                plotFunction(expr, xmin, xmax, samples);
+            } catch(e) {
+                alert('Plot error: ' + (e.message||e));
+            }
+        });
+
+        /* ------------------------
+           AI Assistant (math-only) - a best-effort parser & solver implemented here
+           ------------------------ */
+
+        const chat = document.getElementById('chat');
+        const aiInput = document.getElementById('aiInput');
+        const aiSend = document.getElementById('aiSend');
+
+        function addMessage(text, who='bot') {
+            const m = document.createElement('div');
+            m.className = 'message ' + (who === 'user' ? 'user' : 'bot');
+            m.innerText = text;
+            chat.appendChild(m);
+            chat.scrollTop = chat.scrollHeight;
+        }
+
+        aiSend.addEventListener('click', async ()=> {
+            const q = aiInput.value.trim();
+            if (!q) return;
+            addMessage(q, 'user');
+            aiInput.value = '';
+            await processMathQuery(q);
+        });
+
+        aiInput.addEventListener('keydown', (e)=> { if (e.key === 'Enter') aiSend.click(); });
+
+        async function processMathQuery(text) {
+            // First, decide if the query is math-related; if not, refuse politely.
+            if (!looksLikeMath(text)) {
+                addMessage("I only solve math-related questions. Please ask about arithmetic, algebra, equations, graphing, numeric solving, or paste a word problem.", 'bot');
+                return;
+            }
+            // Try: 1) direct expression 2) 'solve' equation 3) word problem -> parse numbers/verbs
+            try {
+                // If contains '=' treat as equation
+                if (text.includes('=')) {
+                    const sol = solveEquation(text);
+                    addMessage(sol, 'bot');
+                    return;
+                }
+                // If begins with 'integral' or 'derivative' provide small numeric resp or hint (basic)
+                if (/integral|integrate/i.test(text)) {
+                    addMessage("I can give numeric definite integrals or a basic indefinite form. Example: 'integrate x^2 from 0 to 2' or 'integrate x^2'.", 'bot');
+                    // attempt to parse definite integral
+                    const m = text.match(/integrate\s+(.+?)\s+from\s+([-\d\.]+)\s+to\s+([-\d\.]+)/i);
+                    if (m) {
+                        const f = m[1];
+                        const a = Number(m[2]), b = Number(m[3]);
+                        const val = numericIntegrate(f, a, b);
+                        addMessage(`Numeric integral of ${f} from ${a} to ${b} ≈ ${val}`, 'bot');
+                    }
+                    return;
+                }
+
+                // Word-problem heuristics: convert natural-language tokens into operators
+                const converted = wordsToMath(text);
+                if (converted) {
+                    // if it contains 'solve for' or 'x' handle differently
+                    if (/solve\s+for/i.test(text) || /x\b/.test(text)) {
+                        // attempt numeric solve
+                        try {
+                            const roots = numericSolveExpression(converted);
+                            if (roots.length === 0) addMessage("Could not find a root (no sign change detected). Try to be more specific or give bounds.", 'bot');
+                            else addMessage("Solution(s): " + roots.map(r=>String(r)).join(', '), 'bot');
+                        } catch(e) { addMessage("Error solving: " + e.message, 'bot'); }
+                        return;
+                    } else {
+                        // evaluate the expression
+                        try {
+                            const val = parseAndEval(preprocessForParser(converted));
+                            addMessage(converted + ' = ' + val, 'bot');
+                            return;
+                        } catch(e) {
+                            // fallthrough
+                        }
+                    }
+                }
+
+                // fallback: try evaluate as expression
+                try {
+                    const expr = text.replace(/what is\s+/i,'').replace(/\?$/,'');
+                    const v = parseAndEval(preprocessForParser(expr.replace(/\bAns\b/g,String(lastAns))));
+                    addMessage(expr + ' = ' + v, 'bot');
+                    return;
+                } catch(e) {
+                    // if couldn't evaluate directly, attempt numeric root finding as last resort
+                    const guess = extractEquationFromText(text);
+                    if (guess) {
+                        const roots = numericSolveExpression(guess);
+                        addMessage("Solution(s): " + (roots.length?roots.join(', '):'none found'), 'bot');
+                        return;
+                    }
+                }
+
+                addMessage("Sorry — I couldn't parse that. Try giving an equation (e.g. '2x+3=7'), an arithmetic expression (e.g. '12/(3+1)'), or a word problem with numbers.", 'bot');
+            } catch (err) {
+                addMessage("Error processing: " + (err.message||err), 'bot');
+            }
+        }
+
+        function looksLikeMath(t) {
+            return /[0-9xπpi+\-*/^=()]/i.test(t) || /\b(sum|plus|minus|times|multiplied|divided|solve|what is|integrate|derivative|area|perimeter)\b/i.test(t);
+        }
+
+        function wordsToMath(s) {
+            // Basic substitutions for common phrases to arithmetic
+            let t = s.toLowerCase();
+            t = t.replace(/plus/g, '+').replace(/minus/g, '-').replace(/times|multiplied by|multiplied/g, '*').replace(/divided by|over/g,'/');
+            t = t.replace(/sum of\s+([0-9\.\-]+)\s+and\s+([0-9\.\-]+)/g, '($1+$2)');
+            t = t.replace(/difference of\s+([0-9\.\-]+)\s+and\s+([0-9\.\-]+)/g, '($1-$2)');
+            t = t.replace(/product of\s+([0-9\.\-]+)\s+and\s+([0-9\.\-]+)/g, '($1*$2)');
+            t = t.replace(/quotient of\s+([0-9\.\-]+)\s+and\s+([0-9\.\-]+)/g, '($1/$2)');
+            t = t.replace(/what is\s+/g,'');
+            t = t.replace(/\bdegrees\b/g,'');
+            // handle "twice", "thrice"
+            t = t.replace(/\btwice\s+([0-9\.x])/g, '2*$1');
+            t = t.replace(/\bthrice\s+([0-9\.x])/g, '3*$1');
+            // convert words for operators spelled out
+            t = t.replace(/π/g, 'pi');
+            // return if contains digits or x
+            if (/[0-9]/.test(t) || /\bx\b/.test(t)) return t;
+            return null;
+        }
+
+        function extractEquationFromText(s) {
+            // try to find something like "ax + b = c" by grabbing something with '=' or 'equals'
+            if (s.includes('=')) return s;
+            const m = s.match(/equals\s+(.+)/i);
+            if (m) return m[1];
+            return null;
+        }
+
+        // Numeric solver: find roots of f(x)=0 by sampling and bisection
+        function numericSolveExpression(eqnText) {
+            // if equation contains '=', treat lhs-rhs
+            let expr = eqnText;
+            if (expr.includes('=')) {
+                const parts = expr.split('=');
+                expr = '(' + parts[0] + ')-(' + parts.slice(1).join('=') + ')';
+            }
+            expr = preprocessForParser(expr);
+            const f = (x) => {
+                try { return parseAndEval(expr, {x}); } catch(e) { return NaN; }
+            };
+            const roots = [];
+            const MIN = -1000, MAX = 1000;
+            const STEPS = 2000;
+            let prevX = MIN;
+            let prevY = f(prevX);
+            for (let i=1;i<=STEPS;i++) {
+                const x = MIN + (i/STEPS)*(MAX-MIN);
+                const y = f(x);
+                if (!isFinite(y) || !isFinite(prevY)) { prevX=x; prevY=y; continue; }
+                if (Math.sign(y) === 0) {
+                    roots.push(x);
+                } else if (Math.sign(prevY) !== Math.sign(y)) {
+                    // bisection
+                    let a = prevX, b = x;
+                    let fa = prevY, fb = y;
+                    for (let iter=0;iter<60;iter++) {
+                        const m = 0.5*(a+b);
+                        const fm = f(m);
+                        if (!isFinite(fm)) break;
+                        if (Math.sign(fm) === 0) { a = b = m; break; }
+                        if (Math.sign(fa) !== Math.sign(fm)) { b = m; fb = fm; } else { a = m; fa = fm; }
+                    }
+                    const root = 0.5*(a+b);
+                    // avoid duplicates
+                    if (!roots.some(r => Math.abs(r-root) < 1e-6)) roots.push(Number(root.toFixed(12)));
+                }
+                prevX = x; prevY = y;
+            }
+            return roots;
+        }
+
+        // Solve equation strings with '=' or pass to numeric solver
+        function solveEquation(text) {
+            // basic linear/quadratic detection first: attempt closed-form for ax + b = c and ax^2+bx+c = 0
+            // replace words
+            const t = wordsToMath(text) || text;
+            if (t.includes('=')) {
+                // Try to parse as polynomial in x using sampling and solving for coefficients (only degree <=2)
+                // fallback to numeric solver
+                const roots = numericSolveExpression(t);
+                if (roots.length) return 'Solution(s): ' + roots.map(r => r.toString()).join(', ');
+                return 'No real root found (or could not parse analytically). I tried numeric solving.';
+            } else {
+                return 'No equation detected. Try including "=" or say "solve for x".';
+            }
+        }
+
+        function numericIntegrate(fExpr, a, b) {
+            const expr = preprocessForParser(fExpr);
+            const f = (x) => parseAndEval(expr, {x});
+            const n = 2000;
+            const h = (b-a)/n;
+            let sum = 0;
+            for (let i=0;i<=n;i++) {
+                const x = a + i*h;
+                const fx = f(x);
+                if (!isFinite(fx)) continue;
+                sum += fx * (i===0 || i===n ? 0.5 : 1);
+            }
+            return sum*h;
+        }
+
+        /* ------------------------
+           small helpers & keyboard support
+           ------------------------ */
+        // keyboard input (basic)
+        window.addEventListener('keydown', (e)=> {
+            if (document.activeElement === aiInput) return;
+            if (/^[0-9+\-*/^().]$/.test(e.key)) {
+                insert(e.key); refreshDisplay();
+            } else if (e.key === 'Enter') {
+                evaluateCurrent();
+            } else if (e.key === 'Backspace') {
+                currentInput = currentInput.slice(0,-1); refreshDisplay();
+            }
+        });
+
+        // ai quick sample
+        addMessage("Hello — I'm a math assistant. Ask me to solve equations, evaluate expressions, compute numeric integrals, or help with word problems. I only do math.", 'bot');
+
+        // util: populate saved last answer area
+        renderHistory();
+
+        // initialize default mode
+        setMode('standard');
+
+    })();
+</script>
+</body>
+</html>

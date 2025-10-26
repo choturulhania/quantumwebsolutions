@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-size: 3em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        .card {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            padding: 30px;
+            animation: fadeIn 0.6s ease;
+            text-align: center;
+        }
+
+        canvas {
+            background-color: #222;
+            border: 3px solid #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        #gameStatus {
+            margin-top: 20px;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px #0ff;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<h1>Chess Game</h1>
+<div class="card">
+    <canvas id="chessCanvas" width="480" height="480"></canvas>
+    <div id="gameStatus">White's Turn</div>
+</div>
+
+<script>
+    const canvas = document.getElementById("chessCanvas");
+    const ctx = canvas.getContext("2d");
+    const statusDisplay = document.getElementById("gameStatus");
+
+    const boardSize = 8;
+    const squareSize = canvas.width / boardSize;
+
+    let board = [];
+    let selectedPiece = null;
+    let turn = 'white'; // or 'black'
+
+    // Unicode characters for chess pieces
+    const pieces = {
+        'white': {
+            'king': '♔', 'queen': '♕', 'rook': '♖', 'bishop': '♗', 'knight': '♘', 'pawn': '♙'
+        },
+        'black': {
+            'king': '♚', 'queen': '♛', 'rook': '♜', 'bishop': '♝', 'knight': '♞', 'pawn': '♟'
+        }
+    };
+
+    function initializeBoard() {
+        // Setup black pieces
+        board[0] = [{type: 'rook', color: 'black'}, {type: 'knight', color: 'black'}, {type: 'bishop', color: 'black'}, {type: 'queen', color: 'black'}, {type: 'king', color: 'black'}, {type: 'bishop', color: 'black'}, {type: 'knight', color: 'black'}, {type: 'rook', color: 'black'}];
+        board[1] = Array(8).fill(null).map(() => ({type: 'pawn', color: 'black'}));
+
+        // Setup empty squares
+        for (let i = 2; i < 6; i++) {
+            board[i] = Array(8).fill(null);
+        }
+
+        // Setup white pieces
+        board[6] = Array(8).fill(null).map(() => ({type: 'pawn', color: 'white'}));
+        board[7] = [{type: 'rook', color: 'white'}, {type: 'knight', color: 'white'}, {type: 'bishop', color: 'white'}, {type: 'queen', color: 'white'}, {type: 'king', color: 'white'}, {type: 'bishop', color: 'white'}, {type: 'knight', color: 'white'}, {type: 'rook', color: 'white'}];
+
+        drawBoard();
+    }
+
+    function drawBoard() {
+        for (let row = 0; row < boardSize; row++) {
+            for (let col = 0; col < boardSize; col++) {
+                // Draw square
+                ctx.fillStyle = (row + col) % 2 === 0 ? '#f0d9b5' : '#b58863';
+                ctx.fillRect(col * squareSize, row * squareSize, squareSize, squareSize);
+
+                // Draw piece
+                const piece = board[row][col];
+                if (piece) {
+                    ctx.fillStyle = piece.color === 'black' ? '#000' : '#fff';
+                    ctx.font = '40px Arial';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const pieceSymbol = pieces[piece.color][piece.type];
+                    ctx.fillText(pieceSymbol, col * squareSize + squareSize / 2, row * squareSize + squareSize / 2);
+                }
+            }
+        }
+
+        if (selectedPiece) {
+            ctx.strokeStyle = 'yellow';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(selectedPiece.col * squareSize, selectedPiece.row * squareSize, squareSize, squareSize);
+        }
+    }
+
+    function handleClick(event) {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        const col = Math.floor(x / squareSize);
+        const row = Math.floor(y / squareSize);
+
+        if (selectedPiece) {
+            // Try to move the piece
+            if (isValidMove(selectedPiece, {row, col})) {
+                movePiece(selectedPiece, {row, col});
+                selectedPiece = null;
+                turn = turn === 'white' ? 'black' : 'white';
+                statusDisplay.textContent = `${turn.charAt(0).toUpperCase() + turn.slice(1)}'s Turn`;
+            } else {
+                selectedPiece = null; // Deselect if move is invalid
+            }
+        } else {
+            // Select a piece
+            const piece = board[row][col];
+            if (piece && piece.color === turn) {
+                selectedPiece = { piece, row, col };
+            }
+        }
+        drawBoard();
+    }
+
+    // This is a very simplified move validation. A real chess game needs much more complex logic.
+    function isValidMove(start, end) {
+        const startPiece = start.piece;
+        const endPiece = board[end.row][end.col];
+
+        if (endPiece && endPiece.color === startPiece.color) {
+            return false; // Cannot capture own piece
+        }
+
+        // Basic pawn movement (no en passant, promotion)
+        if (startPiece.type === 'pawn') {
+            const direction = startPiece.color === 'white' ? -1 : 1;
+            const startRow = start.row;
+            const startCol = start.col;
+            const endRow = end.row;
+            const endCol = end.col;
+
+            // Move forward
+            if (startCol === endCol && !endPiece) {
+                if (endRow === startRow + direction) return true;
+                // First move
+                if ((startRow === 6 && startPiece.color === 'white') || (startRow === 1 && startPiece.color === 'black')) {
+                    if (endRow === startRow + 2 * direction) return true;
+                }
+            }
+            // Capture
+            if (Math.abs(startCol - endCol) === 1 && endRow === startRow + direction && endPiece) {
+                return true;
+            }
+        } else {
+            // For other pieces, for this example, we'll just allow any move to an empty square or opponent piece.
+            // A real implementation needs to check for piece-specific move patterns (rook, knight, etc.)
+            return true;
+        }
+
+        return false;
+    }
+
+    function movePiece(start, end) {
+        board[end.row][end.col] = start.piece;
+        board[start.row][start.col] = null;
+    }
+
+    canvas.addEventListener('click', handleClick);
+
+    initializeBoard();
+
+</script>
+
+</body>
+</html>

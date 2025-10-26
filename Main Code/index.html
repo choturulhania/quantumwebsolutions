@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="favicon1.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Web Solutions</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        /* General Styles */
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: white;
+            overflow: hidden;
+        }
+
+        /* --- DESKTOP NAV BAR STYLES (Floating, Glass, Single Row - For screens > 1024px) --- */
+        #topnav {
+            position: fixed;
+            top: 15px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+
+            /* Glass effect */
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            padding: 10px 20px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            max-height: 100px;
+            opacity: 1;
+            visibility: visible;
+            transition: max-height 0.4s ease-in-out, opacity 0.4s ease-in-out, visibility 0.4s ease-in-out, padding 0.4s ease-in-out;
+        }
+        #topnav::-webkit-scrollbar { display: none; }
+        #topnav a {
+            text-decoration: none;
+            font-size: 0.95em;
+            font-weight: 500;
+            color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        #topnav a:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-2px);
+        }
+        #topnav a.active {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: #141e30;
+            box-shadow: 0 4px 10px rgba(56, 249, 215, 0.4);
+        }
+        #topnav.nav-hidden {
+            max-height: 0;
+            opacity: 0;
+            visibility: hidden;
+            padding-top: 0;
+            padding-bottom: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* --- DESKTOP TOGGLE BUTTON (For screens > 1024px) --- */
+        #nav-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 101;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #f97f7f, #e94343);
+            color: white;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.4s ease, background 0.5s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #nav-toggle:hover { transform: scale(1.05); }
+        #nav-toggle.toggled-down i { transform: rotate(180deg); }
+        #nav-toggle i { transition: transform 0.4s ease; }
+
+
+        /* --- MOBILE/TABLET NAV (Drawer and Trigger - For screens <= 1024px) --- */
+
+        /* Mobile/Tablet Trigger Button (Hamburger) */
+        #mobile-nav-trigger {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 200;
+            width: 55px;
+            height: 55px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #38f9d7, #43e97b);
+            color: #141e30;
+            border: none;
+            cursor: pointer;
+            box-shadow: 0 5px 20px rgba(56, 249, 215, 0.6);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            transition: transform 0.2s;
+        }
+        #mobile-nav-trigger:active { transform: scale(0.95); }
+
+        /* Mobile Menu Drawer (Full Screen Overlay) */
+        #mobile-menu-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 150;
+
+            /* LIQUID GLASS EFFECT */
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+
+            display: flex;
+            flex-direction: column;
+            /* TIGHTENING: Reduced padding further for a clean edge */
+            padding: 10px;
+            overflow-y: auto;
+
+            /* Hidden state */
+            transform: translateY(100%);
+            opacity: 0;
+            visibility: hidden;
+            transition: transform 0.4s ease-out, opacity 0.4s ease-out, visibility 0.4s;
+        }
+        #mobile-menu-modal.open {
+            transform: translateY(0);
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #mobile-menu-close {
+            align-self: flex-end;
+            background: none;
+            border: none;
+            color: #ff8080;
+            font-size: 1.2em;
+            cursor: pointer;
+            /* TIGHTENING: Minimal margin/padding for a snug fit in the corner */
+            padding: 0;
+            margin: 30px;
+        }
+
+        #mobile-links-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            /* TIGHTENING: Reduced top padding to bring links closer to the button */
+            padding-top: 10px;
+            align-items: center;
+            width: 100%;
+        }
+
+        #mobile-links-container a {
+            text-decoration: none;
+            color: #f0f0f0;
+            font-size: 1.2em;
+            padding: 15px 20px;
+            width: 90%;
+            max-width: 450px;
+            text-align: left;
+            border-radius: 12px;
+            transition: background 0.2s;
+            background: rgba(255, 255, 255, 0.05);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        #mobile-links-container a i {
+            font-size: 1.3em;
+            color: #38f9d7;
+            min-width: 25px;
+        }
+        #mobile-links-container a:hover, #mobile-links-container a.active {
+            background: rgba(56, 249, 215, 0.2);
+        }
+
+        /* --- IFRAME (Content Frame) STYLES --- */
+        #content-frame {
+            width: 100%;
+            margin-top: 100px;
+            height: calc(100vh - 100px);
+            border: none;
+            transition: margin-top 0.4s ease-in-out, height 0.4s ease-in-out;
+        }
+        #content-frame.frame-expanded {
+            margin-top: 0;
+            height: 100vh;
+        }
+
+        /* --- MEDIA QUERY: TABLET/MOBILE FORMAT ACTIVATION (<= 1024px) --- */
+        @media (max-width: 1024px) {
+            /* Hide desktop elements */
+            #topnav, #nav-toggle {
+                display: none !important;
+            }
+
+            /* Show mobile trigger */
+            #mobile-nav-trigger {
+                display: flex;
+            }
+
+            /* Iframe takes up full height on tablet/mobile */
+            #content-frame {
+                margin-top: 0;
+                height: 100vh;
+            }
+        }
+
+        /* --- MEDIA QUERY: SMALL PHONE REFINEMENTS (<= 600px) --- */
+        @media (max-width: 600px) {
+            #mobile-links-container {
+                padding-top: 10px; /* Keep tight padding for small screens */
+                gap: 10px;
+            }
+            /* Reduce link width for more side padding */
+            #mobile-links-container a {
+                max-width: 300px;
+                width: 80%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- DESKTOP Toggle Button (Visible only on screens > 1024px) -->
+<button id="nav-toggle" title="Toggle Navigation">
+    <i class="fas fa-chevron-up"></i>
+</button>
+
+<!-- DESKTOP NAV -->
+<div id="topnav">
+    <!-- These links remain available for desktop -->
+    <a href=" indexx.html" target="content-frame" data-path="indexx.html"><i class="fas fa-home"></i> Home</a>
+    <a href="quantumchat/QuantumChat.html" target="content-frame" data-path="quantumchat/QuantumChat.html"><i class="fas fa-comment-alt"></i> Chat</a>
+    <a href="quantumchat/learning.html" target="content-frame" data-path="quantumchat/learning.html"><i class="fas fa-book"></i> Learning</a>
+    <a href="/quantumhub/index.html" target="content-frame" data-path="/quantumhub/index.html"><i class="fas fa-gamepad"></i> Gaming</a>
+    <a href="/quantumdocs/index.html" target="content-frame" data-path="/quantumdocs/index.html"><i class="fas fa-file-alt"></i> Docs</a>
+    <a href="/quantumai/index.html" target="content-frame" data-path="/quantumai/index.html"><i class="fas fa-robot"></i> AI</a>
+    <a href="/quantumai/quantumcode.html" target="content-frame" data-path="/quantumai/quantumcode.html"><i class="fas fa-code"></i> Code</a>
+    <a href="/quantumai/calculator.html" target="content-frame" data-path="/quantumai/calculator.html"><i class="fas fa-calculator"></i> Calculator</a>
+    <a href="/jscrashcourse/projects/game(pong)/test.html" target="content-frame" data-path="/jscrashcourse/projects/game(pong)/test.html"><i class="fas fa-database"></i> DB</a>
+    <a href="/quantumai/maps.html" target="content-frame" data-path="/quantumai/maps.html"><i class="fas fa-map-location-dot"></i> Maps</a>
+    <a href="art.html" target="content-frame" data-path="art.html"><i class="fas fa-palette"></i> Whiteboard</a>
+</div>
+
+<!-- iframe to load pages -->
+<iframe id="content-frame" name="content-frame" src="../indexx.html"></iframe>
+
+
+<!-- MOBILE/TABLET NAV ELEMENTS -->
+
+<!-- Mobile/Tablet Nav Trigger Button (Visible only on screens <= 1024px) -->
+<button id="mobile-nav-trigger" title="Open Menu">
+    <i class="fas fa-bars"></i>
+</button>
+
+<!-- Mobile Menu Drawer (Full Screen Modal) -->
+<div id="mobile-menu-modal">
+    <button id="mobile-menu-close"><i class="fas fa-times"></i>     </button>
+    <div id="mobile-links-container">
+        <!-- Mobile links will be injected here by JavaScript -->
+        <a href=" indexx.html" target="content-frame" data-path="indexx.html"><i class="fas fa-home"></i> Home</a>
+        <a href="quantumchat/QuantumChat.html" target="content-frame" data-path="quantumchat/QuantumChat.html"><i class="fas fa-comment-alt"></i> Chat</a>
+        <a href="quantumchat/learning.html" target="content-frame" data-path="quantumchat/learning.html"><i class="fas fa-book"></i> Learning</a>
+        <a href="/quantumhub/index.html" target="content-frame" data-path="/quantumhub/index.html"><i class="fas fa-gamepad"></i> Gaming</a>
+        <a href="/quantumai/index.html" target="content-frame" data-path="/quantumai/index.html"><i class="fas fa-robot"></i> AI</a>
+        <a href="/quantumai/calculator.html" target="content-frame" data-path="/quantumai/calculator.html"><i class="fas fa-calculator"></i> Calculator</a>
+        <a href="/jscrashcourse/projects/game(pong)/test.html" target="content-frame" data-path="/jscrashcourse/projects/game(pong)/test.html"><i class="fas fa-database"></i> DB</a>
+        <a href="/quantumai/maps.html" target="content-frame" data-path="/quantumai/maps.html"><i class="fas fa-map-location-dot"></i> Maps</a>
+        <a href="art.html" target="content-frame" data-path="art.html"><i class="fas fa-palette"></i> Whiteboard</a>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const desktopNav = document.getElementById('topnav');
+        const desktopToggle = document.getElementById('nav-toggle');
+        const contentFrame = document.getElementById('content-frame');
+        const allDesktopLinks = desktopNav.querySelectorAll('a');
+
+        const mobileTrigger = document.getElementById('mobile-nav-trigger');
+        const mobileModal = document.getElementById('mobile-menu-modal');
+        const mobileClose = document.getElementById('mobile-menu-close');
+        const mobileLinksContainer = document.getElementById('mobile-links-container');
+
+
+        // --- SETUP: Clone Links for Mobile Menu ---
+        // Clear any existing content in the mobile container first (good practice)
+        mobileLinksContainer.innerHTML = '';
+
+        // Iterate over ALL desktop links and clone them for the mobile menu.
+        allDesktopLinks.forEach(link => {
+            const linkText = link.textContent.trim();
+
+            // FILTER: Skip 'Docs' and 'Code' links for mobile display
+            if (linkText === 'Docs' || linkText === 'Code') {
+                return;
+            }
+
+            // Clone the link element for the mobile menu
+            const mobileLink = link.cloneNode(true);
+
+            // Add click listener for mobile links
+            mobileLink.addEventListener('click', () => {
+                // 1. Close the mobile modal
+                mobileModal.classList.remove('open');
+
+                // 2. Sync active class across all links (desktop and mobile)
+                updateActiveLink(mobileLink);
+            });
+
+            // Append the cloned link to the mobile container
+            mobileLinksContainer.appendChild(mobileLink);
+        });
+
+
+        // Get the full set of links (desktop and mobile)
+        const allNavLinks = document.querySelectorAll('#topnav a, #mobile-links-container a');
+
+
+        // --- CORE FUNCTIONALITY ---
+
+        /**
+         * Updates the active class on all nav links, ensuring they stay synced.
+         */
+        function updateActiveLink(targetLink) {
+            const targetPath = targetLink.getAttribute('href');
+
+            allNavLinks.forEach(link => {
+                // Use href for comparison
+                if (link.getAttribute('href') === targetPath) {
+                    link.classList.add('active');
+                } else {
+                    link.classList.remove('active');
+                }
+            });
+        }
+
+        // Initial setup: set 'Home' as active based on the desktop nav structure
+        updateActiveLink(document.querySelector(`#topnav a[href=" indexx.html"]`));
+
+        // --- DESKTOP LOGIC (screens > 1024px) ---
+
+        /**
+         * Toggles the visibility of the desktop navigation bar and expands/shrinks the content frame.
+         */
+        desktopToggle.addEventListener('click', () => {
+            const isHidden = desktopNav.classList.toggle('nav-hidden');
+            desktopToggle.classList.toggle('toggled-down', isHidden);
+            contentFrame.classList.toggle('frame-expanded', isHidden);
+        });
+
+        // Listener for desktop links to update active class
+        desktopNav.addEventListener('click', (event) => {
+            const link = event.target.closest('a');
+            if (link) {
+                updateActiveLink(link);
+            }
+        });
+
+
+        // --- MOBILE/TABLET LOGIC (screens <= 1024px) ---
+
+        // Open Mobile Menu
+        mobileTrigger.addEventListener('click', () => {
+            mobileModal.classList.add('open');
+        });
+
+        // Close Mobile Menu
+        mobileClose.addEventListener('click', () => {
+            mobileModal.classList.remove('open');
+        });
+    });
+</script>
+
+</body>
+</html>

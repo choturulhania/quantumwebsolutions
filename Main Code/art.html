@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Whiteboard</title>
+    <style>
+        /* Dark theme with Tesla-inspired neumorphism and glassmorphism */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: #f0f0f0;
+            display: flex;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* --- Sidebar Styles --- */
+        #sidebar {
+            width: 0;
+            min-height: 100vh;
+            background: rgba(0, 0, 0, 0.5); /* Semi-transparent dark background */
+            backdrop-filter: blur(10px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 100;
+            transition: width 0.3s ease;
+            overflow-x: hidden;
+            padding-top: 60px;
+            box-shadow: 5px 0 15px rgba(0, 0, 0, 0.5);
+        }
+
+        #sidebar.open {
+            width: 300px; /* Default desktop width when open */
+            padding: 20px 0;
+        }
+
+        #sidebar h2 {
+            text-align: center;
+            color: #38f9d7;
+            margin-bottom: 20px;
+        }
+
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .saved-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .saved-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .saved-item-name {
+            flex-grow: 1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-size: 1.1em;
+        }
+
+        .sidebar-actions button {
+            background: none;
+            border: none;
+            color: #bdc3c7;
+            cursor: pointer;
+            margin-left: 5px;
+            font-size: 1.1em;
+            transition: color 0.2s;
+        }
+
+        .sidebar-actions button.rename-btn:hover { color: #f9d423; }
+        .sidebar-actions button.delete-btn:hover { color: #ff4e50; }
+
+        .sidebar-toggle {
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 101;
+            background: linear-gradient(135deg, #1fa2ff, #12d8fa);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 1.5em;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            transform: scale(1.05);
+        }
+
+        /* --- Main Content Layout --- */
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            transition: margin-left 0.3s ease;
+            width: 100%; /* Important for mobile flow */
+            box-sizing: border-box;
+        }
+
+        .main-content.shifted {
+            margin-left: 300px; /* Shift content when sidebar is open (Desktop default) */
+        }
+
+        header h1 {
+            font-size: 3em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- Sketching Tool Styles --- */
+
+        .sketch-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 15px;
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.4),
+            -5px -5px 10px rgba(255, 255, 255, 0.1);
+            align-items: center;
+            justify-content: center;
+            width: 100%; /* Make toolbar use full container width */
+            box-sizing: border-box;
+        }
+
+        /* Utility container for color/size controls to keep them grouped */
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toolbar label {
+            font-size: 1em;
+            color: #bdc3c7;
+            white-space: nowrap;
+        }
+
+        .toolbar input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            width: 40px;
+            height: 40px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            border-radius: 50%;
+            overflow: hidden;
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.5), inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+            transition: transform 0.2s ease;
+        }
+
+        .toolbar input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+        .toolbar input[type="color"]::-webkit-color-swatch {
+            border: none;
+            border-radius: 50%;
+        }
+
+        .toolbar input[type="range"] {
+            -webkit-appearance: none;
+            width: 100px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .toolbar input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            cursor: pointer;
+            box-shadow: 0 0 5px rgba(67, 233, 123, 0.8);
+        }
+
+        .toolbar button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1em;
+            color: white;
+            box-shadow: 3px 3px 6px rgba(0, 0, 0, 0.4),
+            -3px -3px 6px rgba(255, 255, 255, 0.1);
+            transition: all 0.2s ease;
+            min-width: 80px;
+        }
+
+        .toolbar button:hover {
+            transform: translateY(-1px);
+            box-shadow: 5px 5px 10px rgba(0, 0, 0, 0.5),
+            -5px -5px 10px rgba(255, 255, 255, 0.15);
+        }
+
+        /* Specific button colors */
+        .toolbar #penTool { background: linear-gradient(135deg, #43e97b, #38f9d7); }
+        .toolbar #eraserTool { background: linear-gradient(135deg, #f9d423, #ff4e50); }
+        .toolbar #clearCanvas { background: linear-gradient(135deg, #1fa2ff, #12d8fa); }
+        .toolbar #saveDrawing { background: linear-gradient(135deg, #9900ff, #cc00ff); }
+
+        /* Active tool highlight */
+        .toolbar button.active {
+            transform: scale(0.95);
+            box-shadow: inset 2px 2px 5px rgba(0, 0, 0, 0.6),
+            inset -2px -2px 5px rgba(255, 255, 255, 0.1);
+            border: 2px solid #38f9d7;
+        }
+
+        /* Canvas */
+        #sketchCanvas {
+            border-radius: 20px;
+            background-color: #ffffff;
+            box-shadow: 9px 9px 16px rgba(0, 0, 0, 0.4),
+            -9px -9px 16px rgba(255, 255, 255, 0.1);
+            cursor: crosshair;
+            touch-action: none;
+            width: 100%; /* Make canvas fluid within container */
+            max-width: 100%;
+            height: 500px; /* Default desktop height */
+        }
+
+        /* Utility for renaming input */
+        .rename-input {
+            width: 60%;
+            padding: 5px;
+            margin: 0;
+            border: 1px solid #38f9d7;
+            border-radius: 5px;
+            background: #141e30;
+            color: #f0f0f0;
+            font-size: 1em;
+            box-sizing: border-box;
+        }
+
+        /* --- Mobile Optimization (Max 768px) --- */
+        @media (max-width: 768px) {
+
+            /* Sidebar and Main Content Adjustment */
+            #sidebar.open {
+                width: 75vw; /* Use 75% of viewport width on mobile */
+            }
+
+            .main-content.shifted {
+                margin-left: 75vw; /* Shift content by the new sidebar width */
+            }
+
+            /* Header adjustments */
+            header h1 {
+                font-size: 2em;
+                margin-bottom: 15px;
+            }
+
+            /* Toolbar (Controls) adjustments */
+            .toolbar {
+                gap: 10px;
+                padding: 10px;
+                border-radius: 10px;
+                justify-content: space-around; /* Distribute items more evenly */
+            }
+
+            /* Group buttons together and use flex-basis to control wrapping */
+            .toolbar button {
+                flex-basis: calc(50% - 5px); /* Two buttons per row */
+                min-width: unset;
+                padding: 12px 10px;
+                font-size: 0.9em;
+            }
+
+            /* Adjust individual tool buttons to take up 50% width */
+            #penTool, #eraserTool, #clearCanvas, #saveDrawing {
+                flex-basis: calc(50% - 5px);
+            }
+
+            /* Stack controls (color and size) vertically if needed, or ensure they don't break flow */
+            .control-group {
+                /* Let the control group flex-wrap if needed */
+                flex-wrap: wrap;
+                justify-content: center;
+                flex-basis: 100%; /* Take up a full row for controls */
+            }
+
+            .toolbar input[type="range"] {
+                width: 120px; /* Make the slider a bit wider */
+            }
+
+            /* Canvas size adjustment */
+            #sketchCanvas {
+                height: 60vh; /* Use a percentage of viewport height */
+                border-radius: 10px;
+            }
+
+            /* Sidebar toggle button visibility */
+            .sidebar-toggle {
+                width: 40px;
+                height: 40px;
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button class="sidebar-toggle" id="sidebarToggle">☰</button>
+
+<div id="sidebar">
+    <h2>Saved Sketches</h2>
+    <ul id="savedDrawingsList">
+    </ul>
+</div>
+
+<div class="main-content" id="mainContent">
+    <header>
+        <h1>Quantum Whiteboard</h1>
+    </header>
+
+    <div class="sketch-container">
+        <div class="toolbar">
+            <button id="penTool" class="active">Pen 🖊️</button>
+            <button id="eraserTool">Eraser 🧼</button>
+
+            <div class="control-group">
+                <label for="colorPicker">Color:</label>
+                <input type="color" id="colorPicker" value="#000000">
+            </div>
+
+            <div class="control-group">
+                <label for="thicknessRange">Size:</label>
+                <input type="range" id="thicknessRange" min="1" max="50" value="5">
+                <span id="thicknessValue">5</span>px
+            </div>
+
+            <button id="clearCanvas">Clear</button>
+            <button id="saveDrawing">Save 💾</button>
+        </div>
+
+        <canvas id="sketchCanvas" width="800" height="500"></canvas>
+    </div>
+</div>
+
+<script>
+    const canvas = document.getElementById('sketchCanvas');
+    const ctx = canvas.getContext('2d');
+    const colorPicker = document.getElementById('colorPicker');
+    const thicknessRange = document.getElementById('thicknessRange');
+    const thicknessValueSpan = document.getElementById('thicknessValue');
+    const penToolBtn = document.getElementById('penTool');
+    const eraserToolBtn = document.getElementById('eraserTool');
+    const clearCanvasBtn = document.getElementById('clearCanvas');
+    const saveDrawingBtn = document.getElementById('saveDrawing');
+    const toolbarButtons = document.querySelectorAll('.toolbar button');
+
+    const sidebar = document.getElementById('sidebar');
+    const sidebarToggle = document.getElementById('sidebarToggle');
+    const mainContent = document.getElementById('mainContent');
+    const savedDrawingsList = document.getElementById('savedDrawingsList');
+
+    let isDrawing = false;
+    let lastX = 0;
+    let lastY = 0;
+    let currentTool = 'pen';
+    const LOCAL_STORAGE_KEY = 'quantumSketches';
+
+    // --- Initialization & Tool Setup ---
+
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.strokeStyle = colorPicker.value;
+    ctx.lineWidth = thicknessRange.value;
+
+    // Function to handle canvas resizing for responsiveness
+    function resizeCanvas() {
+        // Only resize canvas if it's currently on screen (or use a modern approach)
+        const container = canvas.closest('.sketch-container');
+        if (container) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            tempCtx.drawImage(canvas, 0, 0);
+
+            // Get the calculated width and height of the canvas element from CSS
+            const style = getComputedStyle(canvas);
+            const w = parseInt(style.width, 10);
+            const h = parseInt(style.height, 10);
+
+            // Re-set canvas dimensions to match the CSS size
+            canvas.width = w;
+            canvas.height = h;
+
+            // Redraw the saved image content if we can
+            if (tempCanvas.width > 0 && tempCanvas.height > 0) {
+                ctx.drawImage(tempCanvas, 0, 0, canvas.width, canvas.height);
+            }
+        }
+    }
+
+    // Initial call to set canvas size based on its container
+    window.addEventListener('load', resizeCanvas);
+    window.addEventListener('resize', resizeCanvas);
+
+
+    function setActiveTool(tool) {
+        currentTool = tool;
+        toolbarButtons.forEach(btn => btn.classList.remove('active'));
+
+        if (tool === 'pen') {
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = colorPicker.value;
+            penToolBtn.classList.add('active');
+        } else if (tool === 'eraser') {
+            ctx.globalCompositeOperation = 'destination-out';
+            ctx.strokeStyle = 'rgba(0,0,0,1)';
+            eraserToolBtn.classList.add('active');
+        }
+    }
+
+    penToolBtn.addEventListener('click', () => setActiveTool('pen'));
+    eraserToolBtn.addEventListener('click', () => setActiveTool('eraser'));
+
+    thicknessRange.addEventListener('input', () => {
+        thicknessValueSpan.textContent = thicknessRange.value;
+        ctx.lineWidth = thicknessRange.value;
+    });
+
+    colorPicker.addEventListener('input', () => {
+        if (currentTool === 'pen') {
+            ctx.strokeStyle = colorPicker.value;
+        }
+    });
+
+    // --- Drawing Logic (Unchanged) ---
+    function draw(e) {
+        if (!isDrawing) return;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const rect = canvas.getBoundingClientRect();
+        const currentX = clientX - rect.left;
+        const currentY = clientY - rect.top;
+
+        ctx.beginPath();
+        ctx.moveTo(lastX, lastY);
+        ctx.lineTo(currentX, currentY);
+        ctx.stroke();
+
+        lastX = currentX;
+        lastY = currentY;
+    }
+
+    function startDrawing(e) {
+        isDrawing = true;
+
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+        const rect = canvas.getBoundingClientRect();
+        lastX = clientX - rect.left;
+        lastY = clientY - rect.top;
+
+        draw(e);
+    }
+
+    function stopDrawing() {
+        isDrawing = false;
+    }
+
+    canvas.addEventListener('mousedown', startDrawing);
+    canvas.addEventListener('mousemove', draw);
+    canvas.addEventListener('mouseup', stopDrawing);
+    canvas.addEventListener('mouseout', stopDrawing);
+
+    canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+    canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+    canvas.addEventListener('touchend', stopDrawing);
+
+    clearCanvasBtn.addEventListener('click', () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+    });
+
+    // --- Local Storage and Sidebar Functions ---
+
+    function getDrawings() {
+        try {
+            return JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY)) || [];
+        } catch (e) {
+            console.error("Could not parse Local Storage data:", e);
+            return [];
+        }
+    }
+
+    function saveDrawings(drawings) {
+        localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(drawings));
+        renderDrawingsList();
+    }
+
+    // Save Button Handler
+    saveDrawingBtn.addEventListener('click', () => {
+        const defaultName = `Sketch ${Date.now()}`;
+        const drawingName = prompt("Enter a name for your sketch:", defaultName);
+
+        if (drawingName !== null) {
+            const dataURL = canvas.toDataURL('image/png');
+            const newDrawing = {
+                id: Date.now(),
+                name: drawingName.trim() || defaultName,
+                // Save current width/height for potential resize handling on load
+                width: canvas.width,
+                height: canvas.height,
+                data: dataURL
+            };
+
+            const drawings = getDrawings();
+            drawings.push(newDrawing);
+            saveDrawings(drawings);
+        }
+    });
+
+    // Load Drawing onto Canvas
+    function loadDrawing(dataURL, savedWidth, savedHeight) {
+        clearCanvasBtn.click(); // Clear current canvas
+        const img = new Image();
+        img.onload = function() {
+            // Check if canvas was resized since save and adjust draw scale
+            const scaleX = canvas.width / img.width;
+            const scaleY = canvas.height / img.height;
+            const scale = Math.min(scaleX, scaleY);
+
+            // For simplicity, we just draw the image scaled to fit the current canvas size
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            // To be more accurate with coordinates, one would track the original scale and offset
+            // However, simply drawing the image to fill the new canvas is often sufficient for whiteboards.
+        };
+        img.src = dataURL;
+    }
+
+    // Rename Drawing
+    function renameDrawing(id) {
+        const drawings = getDrawings();
+        const index = drawings.findIndex(d => d.id == id);
+        if (index > -1) {
+            const newName = prompt("Rename your sketch:", drawings[index].name);
+            if (newName && newName.trim() !== "") {
+                drawings[index].name = newName.trim();
+                saveDrawings(drawings);
+            }
+        }
+    }
+
+    // Delete Drawing
+    function deleteDrawing(id) {
+        if (confirm("Are you sure you want to delete this sketch?")) {
+            let drawings = getDrawings();
+            drawings = drawings.filter(d => d.id != id);
+            saveDrawings(drawings);
+        }
+    }
+
+    // Render Sidebar List
+    function renderDrawingsList() {
+        const drawings = getDrawings();
+        savedDrawingsList.innerHTML = ''; // Clear existing list
+
+        if (drawings.length === 0) {
+            savedDrawingsList.innerHTML = '<li style="padding: 20px; text-align: center; color: #bdc3c7;">No saved sketches.</li>';
+            return;
+        }
+
+        drawings.forEach(drawing => {
+            const li = document.createElement('li');
+            li.className = 'saved-item';
+            li.dataset.id = drawing.id;
+
+            // Name element - Click to load
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'saved-item-name';
+            nameSpan.textContent = drawing.name;
+            nameSpan.title = 'Click to load sketch';
+            nameSpan.onclick = () => loadDrawing(drawing.data, drawing.width, drawing.height);
+
+            const actionsDiv = document.createElement('div');
+            actionsDiv.className = 'sidebar-actions';
+
+            // Rename Button
+            const renameBtn = document.createElement('button');
+            renameBtn.className = 'rename-btn';
+            renameBtn.innerHTML = '📝';
+            renameBtn.title = 'Rename';
+            renameBtn.onclick = (e) => {
+                e.stopPropagation(); // Prevent the parent load action
+                renameDrawing(drawing.id);
+            };
+
+            // Delete Button
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'delete-btn';
+            deleteBtn.innerHTML = '✖';
+            deleteBtn.title = 'Delete';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation(); // Prevent the parent load action
+                deleteDrawing(drawing.id);
+            };
+
+            actionsDiv.appendChild(renameBtn);
+            actionsDiv.appendChild(deleteBtn);
+            li.appendChild(nameSpan);
+            li.appendChild(actionsDiv);
+
+            savedDrawingsList.appendChild(li);
+        });
+    }
+
+    // Sidebar Toggle
+    sidebarToggle.addEventListener('click', () => {
+        sidebar.classList.toggle('open');
+        mainContent.classList.toggle('shifted');
+    });
+
+    // --- Start up ---
+    setActiveTool('pen');
+    renderDrawingsList();
+</script>
+</body>
+</html>

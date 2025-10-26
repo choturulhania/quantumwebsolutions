@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Playground</title>
+    <style>
+        body {
+            margin: 0;
+            background-color: #111;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            height: 100vh;
+            justify-content: center;
+        }
+
+        h1 {
+            text-shadow: 0 0 20px #0ff;
+            margin-bottom: 20px;
+        }
+
+        #languageSelect {
+            margin-bottom: 20px;
+            padding: 10px;
+            border-radius: 15px;
+            border: none;
+            font-size: 1rem;
+            background-color: #222;
+            color: #0ff;
+            box-shadow: 0 0 15px #0ff;
+        }
+
+        textarea {
+            width: 500px;
+            height: 250px;
+            background-color: #222;
+            color: #0ff;
+            border-radius: 15px;
+            border: none;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 1rem;
+            box-shadow: 0 0 20px #0ff;
+            resize: none;
+            outline: none;
+        }
+
+        #runBtn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 20px;
+            background-color: #0ff;
+            color: #111;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px #0ff;
+            transition: transform 0.2s;
+        }
+
+        #runBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #output {
+            margin-top: 20px;
+            width: 500px;
+            min-height: 100px;
+            background-color: #222;
+            border-radius: 15px;
+            padding: 15px;
+            box-shadow: 0 0 20px #0ff;
+            font-family: 'Courier New', monospace;
+            white-space: pre-wrap;
+            color: #ff0;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Code Playground</h1>
+
+<select id="languageSelect">
+    <option value="python">Python</option>
+    <option value="csharp">C#</option>
+</select>
+
+<textarea id="codeInput" placeholder="Type your code here..."></textarea>
+<button id="runBtn">Run Code</button>
+<div id="output">Output will appear here...</div>
+
+<script>
+    const codeInput = document.getElementById('codeInput');
+    const runBtn = document.getElementById('runBtn');
+    const output = document.getElementById('output');
+    const languageSelect = document.getElementById('languageSelect');
+
+    // Predefined code simulation for Python and C#
+    const predefinedPython = {
+        'print("Hello, World!")': 'Hello, World!',
+        'for i in range(3):\n    print(i)': '0\n1\n2',
+    };
+
+    const predefinedCSharp = {
+        'Console.WriteLine("Hello, World!");': 'Hello, World!',
+        'for(int i=0;i<3;i++) {\n    Console.WriteLine(i);\n}': '0\n1\n2',
+    };
+
+    runBtn.addEventListener('click', () => {
+        const code = codeInput.value.trim();
+        const lang = languageSelect.value;
+
+        if(lang === 'python') {
+            output.textContent = predefinedPython[code] || "Output: Simulated Python code cannot be run yet.";
+        } else if(lang === 'csharp') {
+            output.textContent = predefinedCSharp[code] || "Output: Simulated C# code cannot be run yet.";
+        }
+    });
+</script>
+
+</body>
+</html>

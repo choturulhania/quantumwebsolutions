@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/png" href="favicon1.png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✧ Quantum Web Solutions ✧</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 40px 20px;
+            overflow-x: hidden;
+        }
+
+        /* Top badge */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(90deg, #ffe29f, #ffa99f, #ff719a);
+            color: #222;
+            font-weight: 600;
+            font-size: 0.95em;
+            padding: 10px 18px;
+            border-radius: 999px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
+            animation: fadeIn 1.5s ease;
+        }
+
+        .badge svg {
+            width: 18px;
+            height: 18px;
+            fill: #ff7b00;
+        }
+
+        header h1 {
+            font-size: 3.8em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite, slideUp 1s ease forwards;
+            opacity: 0;
+            text-align: center;
+            margin: 30px 0 10px;
+        }
+
+        header p {
+            font-size: 1.25em;
+            color: #ccc;
+            margin-bottom: 60px;
+            text-align: center;
+            animation: fadeIn 2s ease forwards;
+            opacity: 0;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .solutions {
+            max-width: 900px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            width: 100%;
+            animation: fadeIn 2.5s ease forwards;
+            opacity: 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            box-shadow: 0 6px 25px rgba(0,0,0,0.35);
+            padding: 40px 30px;
+            text-align: left;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 35px rgba(0,0,0,0.5);
+        }
+
+        .icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .icon-blue {
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .icon-orange {
+            background: linear-gradient(135deg, #ff9966, #ff5e62);
+        }
+
+        .icon svg {
+            width: 28px;
+            height: 28px;
+            fill: white;
+        }
+
+        .card h3 {
+            font-size: 1.6em;
+            margin-bottom: 12px;
+        }
+
+        .card p {
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #e8e8e8;
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            display: inline-block;
+            font-weight: 500;
+            color: #fff;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+        .btn:hover {
+            opacity: 0.8;
+        }
+
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            font-size: 0.85rem;
+            color: #aaa;
+            margin-top: 80px;
+            animation: fadeIn 3s ease forwards;
+            opacity: 0;
+        }
+    </style>
+</head>
+<body>
+<!-- Top badge -->
+<div class="badge">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+        <path d="M12 2L13.09 8.26L19 9.27L14.5 13.14L15.82 19.02L12 15.77L8.18 19.02L9.5 13.14L5 9.27L10.91 8.26L12 2Z"/>
+    </svg>
+    Your Connected Workspace
+</div>
+
+<header>
+    <h1>Quantum Web Solutions</h1>
+    <p>Connect your tools. Streamline your fun.
+        The all-in-one interactive hub.</p>
+</header>
+
+<main>
+    <section class="solutions">
+        <!-- Quantum Chat -->
+        <div class="card">
+            <div class="icon icon-blue">
+                <!-- chat bubble icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M20 2H4C2.897 2 2 2.897 2 4V22L6 18H20C21.103 18 22 17.103 22 16V4C22 2.897 21.103 2 20 2Z"/>
+                </svg>
+            </div>
+            <h3>Quantum Chat</h3>
+            <p>An all-in-one chat experience where you can learn, collaborate, and play—seamlessly.</p>
+            <a href="quantumchat/quantumchat.html" class="btn">Go to Page →</a>
+        </div>
+
+        <!-- Quantum Hub (Games) -->
+        <div class="card">
+            <div class="icon icon-orange">
+                <!-- game controller icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                    <path d="M21 6H3C1.9 6 1 6.9 1 8V16C1 17.1 1.9 18 3 18H8L12 22L16 18H21C22.1 18 23 17.1 23 16V8C23 6.9 22.1 6 21 6ZM7 14C6.45 14 6 13.55 6 13C6 12.45 6.45 12 7 12C7.55 12 8 12.45 8 13C8 13.55 7.55 14 7 14ZM10 11C9.45 11 9 10.55 9 10C9 9.45 9.45 9 10 9C10.55 9 11 9.45 11 10C11 10.55 10.55 11 10 11Z"/>
+                </svg>
+            </div>
+            <h3>Quantum Hub</h3>
+            <p>Your home of arcade—bringing you free, fast, and fun games with a premium experience.</p>
+            <a href="quantumhub/index.html" class="btn">Go to Page →</a>
+        </div>
+    </section>
+</main>
+
+<footer>
+    &copy; 2025 Quantum Web Solutions. All Rights Reserved.
+</footer>
+</body>
+</html>

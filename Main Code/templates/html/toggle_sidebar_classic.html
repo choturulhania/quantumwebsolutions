@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Sidebar Layout</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        #sidebar {
+            width: 250px;
+            background: #2c3e50;
+            color: #ecf0f1;
+            transition: all 0.3s ease;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        #sidebar.hidden {
+            width: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Main content */
+        #main {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            transition: margin-left 0.3s ease;
+        }
+
+        /* Toggle button */
+        #toggle-btn {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 6px 8px;
+            cursor: pointer;
+            border-radius: 4px;
+            z-index: 10;
+        }
+
+        #toggle-btn:hover {
+            background: #2980b9;
+        }
+
+        h1 {
+            margin-top: 0;
+        }
+    </style>
+</head>
+<body>
+<button id="toggle-btn">☰</button>
+
+<div id="sidebar">
+    <h2>Sidebar</h2>
+    <ul>
+        <li><a href="#" style="color: #ecf0f1; text-decoration: none;">Home</a></li>
+        <li><a href="#" style="color: #ecf0f1; text-decoration: none;">About</a></li>
+        <li><a href="#" style="color: #ecf0f1; text-decoration: none;">Contact</a></li>
+    </ul>
+</div>
+
+<div id="main">
+    <h1>Welcome</h1>
+    <p>
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed eget consequat risus.
+        Vivamus non elementum justo, ac mattis tortor. Donec sed nunc nec lorem consequat
+        hendrerit. Nullam ultrices quam at sagittis congue. In nec viverra arcu.
+    </p>
+    <p>
+        Morbi mattis interdum lacus nec tincidunt. Integer finibus mi at ex aliquam,
+        nec luctus sem pharetra. Fusce ut fermentum nulla. Pellentesque id massa risus.
+        Vestibulum gravida, nisl in bibendum blandit, metus ligula dictum sem, ut
+        dignissim mi augue eget arcu.
+    </p>
+</div>
+
+<script>
+    const toggleBtn = document.getElementById('toggle-btn');
+    const sidebar = document.getElementById('sidebar');
+
+    toggleBtn.addEventListener('click', () => {
+        sidebar.classList.toggle('hidden');
+    });
+</script>
+</body>
+</html>

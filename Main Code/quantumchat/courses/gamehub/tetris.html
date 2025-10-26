@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Twisted Tetris ✦</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <style>
+        :root{
+            --bg-dark: linear-gradient(120deg,#141e30,#243b55);
+            --accent-grad: linear-gradient(270deg,#34c759,#007aff,#ff2d55);
+            --card: rgba(255,255,255,0.06);
+            --muted: rgba(255,255,255,0.75);
+            --radius:18px;
+        }
+        html,body{height:100%;margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;}
+        body{display:flex;align-items:flex-start;justify-content:center;padding:28px;background:var(--bg-dark);color:white;min-height:100vh;}
+        @keyframes gradientShift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+        header h1{font-size:2.2rem;margin:0 0 12px;background: linear-gradient(270deg,#ff4e50,#f9d423,#1fa2ff,#12d8fa,#a6ffcb);background-size:800% 800%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:gradientShift 12s ease infinite;text-align:center}
+        .container{width:100%;max-width:1200px}
+        .hstack{display:flex;gap:18px}
+        .left-panel{width:300px;background:var(--card);border-radius:16px;padding:18px;backdrop-filter: blur(10px);box-shadow:0 12px 40px rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.03)}
+        .left-panel h2{margin:0 0 12px;font-size:18px;font-weight:700;background:var(--accent-grad);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:600% 600%;animation:gradientShift 11s linear infinite}
+        .control-btn{display:block;width:100%;padding:10px 14px;border-radius:14px;border:none;color:white;background:var(--accent-grad);background-size:500% 500%;animation:gradientShift 10s ease infinite;font-weight:600;cursor:pointer;margin-bottom:10px;box-shadow:0 6px 18px rgba(0,0,0,0.25)}
+        .small-btn{display:inline-block;padding:8px 12px;border-radius:12px;border:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);color:inherit;cursor:pointer}
+        .hint{font-size:13px;color:var(--muted);margin-bottom:6px}
+        .center-card{flex:1;padding:18px;border-radius:20px;background:var(--card);backdrop-filter: blur(10px);box-shadow:0 18px 60px rgba(0,0,0,0.5);display:flex;flex-direction:column;gap:12px;border:1px solid rgba(255,255,255,0.03);position:relative;overflow:hidden}
+        .canvas-wrap{display:flex;gap:18px;align-items:flex-start}
+        .canvas-area{background:linear-gradient(180deg,#0b2540,#123a6b);padding:14px;border-radius:12px;box-shadow:inset 0 4px 18px rgba(0,0,0,0.45);}
+        #tetrisCanvas{display:block;background:#071428;border-radius:4px}
+        .sidebar-right{width:220px;display:flex;flex-direction:column;gap:12px}
+        .panel{background:rgba(255,255,255,0.03);padding:12px;border-radius:12px}
+        .panel h3{margin:0 0 8px;background:linear-gradient(270deg,#ff7e5f,#feb47b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .kv{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        .small{font-size:13px;color:var(--muted)}
+        .footer{font-size:12px;color:var(--muted);text-align:center;margin-top:8px}
+        .legend{display:flex;gap:8px;flex-wrap:wrap}
+        .legend .sw{width:18px;height:18px;border-radius:4px}
+        .controls{display:flex;gap:8px;flex-wrap:wrap}
+        .note{font-size:12px;color:var(--muted);margin-top:8px}
+        @media (max-width:900px){.hstack{flex-direction:column}.left-panel{width:100%}.sidebar-right{width:100%}}
+    </style>
+</head>
+<body>
+<div class="container">
+    <header style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+        <h1>✦ Twisted Tetris ✦</h1>
+        <div style="display:flex;gap:10px;align-items:center">
+            <button id="btnPause" class="small-btn">Pause</button>
+            <button id="btnRestart" class="small-btn">Restart</button>
+            <button id="btnSound" class="small-btn">🔊 On</button>
+        </div>
+    </header>
+
+    <div class="hstack">
+        <aside class="left-panel">
+            <h2>Game Controls</h2>
+            <div>
+                <button id="btnStart" class="control-btn">Start New Game</button>
+                <div class="hint">Controls</div>
+                <div class="small">← → : Move • ↑ / Z : Rotate • X : Rotate CW • ↓ : Soft Drop</div>
+                <div class="small">Space : Hard Drop • C : Hold • P : Pause</div>
+                <div style="margin-top:10px;">
+                    <label class="small">Speed Level</label>
+                    <select id="selSpeed">
+                        <option value="0">Level 0 (Easy)</option>
+                        <option value="1">Level 1</option>
+                        <option value="2">Level 2</option>
+                        <option value="3" selected>Level 3</option>
+                        <option value="4">Level 4</option>
+                        <option value="5">Level 5 (Fast)</option>
+                    </select>
+                </div>
+                <div style="margin-top:10px;">
+                    <label><input type="checkbox" id="chkTwist" checked> Enable Twist Mode</label>
+                    <div class="note">Twist Mode introduces Bomb & Rainbow pieces plus board chaos on clears.</div>
+                </div>
+            </div>
+
+            <div style="margin-top:12px" class="panel">
+                <h3>Scoring</h3>
+                <div class="kv"><div>Single</div><div>100</div></div>
+                <div class="kv"><div>Double</div><div>250</div></div>
+                <div class="kv"><div>Triple</div><div>500</div></div>
+                <div class="kv"><div>Tetris (4)</div><div>1200</div></div>
+                <div class="kv"><div>Bomb Clear</div><div>+ extra</div></div>
+            </div>
+
+            <div style="margin-top:12px" class="panel">
+                <h3>Legend</h3>
+                <div class="legend">
+                    <div><div class="sw" style="background:#00d6ff"></div> I</div>
+                    <div><div class="sw" style="background:#ffd700"></div> O</div>
+                    <div><div class="sw" style="background:#ff6b6b"></div> T</div>
+                    <div><div class="sw" style="background:#9b59b6"></div> L</div>
+                    <div><div class="sw" style="background:#3498db"></div> J</div>
+                    <div><div class="sw" style="background:#2ecc71"></div> S</div>
+                    <div><div class="sw" style="background:#f39c12"></div> Z</div>
+                    <div><div class="sw" style="background:#ffffff;border:2px solid #ff5f5f"></div> Bomb</div>
+                    <div><div class="sw" style="background:linear-gradient(45deg,#ffd27f,#b2f7ff)"></div> Rainbow</div>
+                </div>
+            </div>
+
+            <div class="footer">Have fun — Tilting the rules since 1984</div>
+        </aside>
+
+        <section class="center-card">
+            <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                    <div id="statusText" style="font-weight:700">Ready</div>
+                    <div class="small">Twist Tetris — special blocks & chaos!</div>
+                </div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <div class="small">Lines: <span id="lines">0</span></div>
+                    <div class="small">Level: <span id="level">0</span></div>
+                    <div class="small">Score: <span id="score">0</span></div>
+                </div>
+            </div>
+
+            <div class="canvas-wrap" style="margin-top:8px">
+                <div class="canvas-area">
+                    <!-- canvas width/height tuned for cell size -->
+                    <canvas id="tetrisCanvas" width="300" height="600"></canvas>
+                </div>
+
+                <div class="sidebar-right">
+                    <div class="panel">
+                        <h3>Next</h3>
+                        <canvas id="nextCanvas" width="120" height="320" style="background:transparent"></canvas>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Hold</h3>
+                        <canvas id="holdCanvas" width="120" height="120" style="background:transparent"></canvas>
+                    </div>
+
+                    <div class="panel">
+                        <h3>Tips</h3>
+                        <div class="small">Try to surround Bomb blocks so they explode into many bits. Rainbow helps complete awkward lines.</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<script>
+    /* Twisted Tetris - single-file
+       Controls: left/right/down, Z/X rotate, up rotate also, space hard drop, c hold, p pause.
+       Twist mode: Bomb and Rainbow blocks appear occasionally. Bomb clears a 3x3 when locked.
+    */
+
+    (() => {
+        const canvas = document.getElementById('tetrisCanvas');
+        const ctx = canvas.getContext('2d');
+        const nextCanvas = document.getElementById('nextCanvas');
+        const nctx = nextCanvas.getContext('2d');
+        const holdCanvas = document.getElementById('holdCanvas');
+        const hctx = holdCanvas.getContext('2d');
+
+        // Grid size
+        const COLS = 10, ROWS = 20;
+        const CELL = Math.floor(canvas.height / ROWS); // cell size derived from canvas height
+        canvas.width = COLS * CELL;
+        canvas.height = ROWS * CELL;
+
+        // Next/hold scaling
+        nextCanvas.width = 120; nextCanvas.height = 320;
+        holdCanvas.width = 120; holdCanvas.height = 120;
+
+        // Game state
+        let grid = createGrid(ROWS, COLS);
+        let current = null; // {type, shape, x, y, rot, special}
+        let hold = null;
+        let holdUsed = false;
+        let queue = [];
+        let score = 0, lines = 0, level = 0;
+        let tickInterval = 800;
+        let running = false, paused = false;
+        let lastTick = performance.now();
+        let gravityAcc = 0;
+        let combo = 0;
+        let twistEnabled = document.getElementById('chkTwist').checked;
+        let soundOn = true;
+
+        // UI elements
+        const statusText = document.getElementById('statusText');
+        const scoreEl = document.getElementById('score');
+        const linesEl = document.getElementById('lines');
+        const levelEl = document.getElementById('level');
+
+        // audio
+        const AudioC = window.AudioContext || window.webkitAudioContext;
+        let aCtx = null;
+        function ensureAudio() { if(!aCtx) aCtx = new AudioC(); }
+        function note(freq, dur=0.08, vol=0.06){
+            if(!soundOn) return;
+            ensureAudio();
+            const o = aCtx.createOscillator();
+            const g = aCtx.createGain();
+            o.type = 'sine';
+            o.frequency.value = freq;
+            g.gain.value = vol;
+            o.connect(g); g.connect(aCtx.destination);
+            o.start();
+            g.gain.exponentialRampToValueAtTime(0.0001, aCtx.currentTime + dur);
+            o.stop(aCtx.currentTime + dur + 0.02);
+        }
+
+        // Piece definitions (tetromino shapes)
+        const PIECES = {
+            I: [ [[0,1],[1,1],[2,1],[3,1]],
+                [[2,0],[2,1],[2,2],[2,3]],
+                [[0,2],[1,2],[2,2],[3,2]],
+                [[1,0],[1,1],[1,2],[1,3]] ],
+            O: [ [[1,0],[2,0],[1,1],[2,1]] ],
+            T: [ [[1,0],[0,1],[1,1],[2,1]],
+                [[1,0],[1,1],[2,1],[1,2]],
+                [[0,1],[1,1],[2,1],[1,2]],
+                [[1,0],[0,1],[1,1],[1,2]] ],
+            L: [ [[2,0],[0,1],[1,1],[2,1]],
+                [[1,0],[1,1],[1,2],[2,2]],
+                [[0,1],[1,1],[2,1],[0,2]],
+                [[0,0],[1,0],[1,1],[1,2]] ],
+            J: [ [[0,0],[0,1],[1,1],[2,1]],
+                [[1,0],[2,0],[1,1],[1,2]],
+                [[0,1],[1,1],[2,1],[2,2]],
+                [[1,0],[1,1],[0,2],[1,2]] ],
+            S: [ [[1,0],[2,0],[0,1],[1,1]],
+                [[1,0],[1,1],[2,1],[2,2]],
+                [[1,1],[2,1],[0,2],[1,2]] ],
+            Z: [ [[0,0],[1,0],[1,1],[2,1]],
+                [[2,0],[1,1],[2,1],[1,2]],
+                [[0,1],[1,1],[1,2],[2,2]] ],
+            // Twisted specials will be handled as 'B' (bomb) and 'R' (rainbow)
+            B: [ [[1,0],[1,1],[2,1],[2,0]] ], // small 2x2 bomb placeholder shape (we lock as a single block typically)
+            R: [ [[1,0],[1,1],[2,1],[2,0]] ]  // using same as B visually; behavior differs
+        };
+
+        // Colors for pieces
+        const COLORS = {
+            I:'#00d6ff', O:'#ffd700', T:'#ff6b6b', L:'#9b59b6', J:'#3498db', S:'#2ecc71', Z:'#f39c12',
+            B:'#ffffff', R: 'linear' // rainbow
+        };
+
+        // Helper: create empty grid
+        function createGrid(rows, cols){
+            const g = [];
+            for(let r=0;r<rows;r++){ g[r]=[]; for(let c=0;c<cols;c++) g[r][c]=null; }
+            return g;
+        }
+
+        // Randomize piece generator with twist chance
+        function randomPiece(){
+            const base = ['I','O','T','L','J','S','Z'];
+            // small chance for twist specials
+            if(twistEnabled && Math.random() < 0.06) return Math.random()<0.5 ? 'B':'R';
+            return base[Math.floor(Math.random()*base.length)];
+        }
+
+        // Fill queue
+        function fillQueue(){
+            while(queue.length < 6) queue.push(randomPiece());
+        }
+
+        // Spawn next piece
+        function spawnPiece(){
+            fillQueue();
+            const type = queue.shift();
+            const shape = PIECES[type];
+            // initial x,y (x is column)
+            const x = Math.floor(COLS/2) - 2;
+            const y = -1; // start above top; collision handled
+            current = { type, rot:0, shape, x, y, special: (type==='B' || type==='R') ? type : null };
+            holdUsed = false;
+            if(collides(current, current.x, current.y, current.rot)){
+                // game over
+                running = false;
+                statusText.textContent = 'Game Over — Press Restart';
+                note(120, 0.2, 0.08);
+            }
+        }
+
+        // Collision check for a piece at given x,y,rot
+        function collides(piece, x, y, rot){
+            const matrix = piece.shape[rot % piece.shape.length];
+            for(const cell of matrix){
+                const cx = x + cell[0];
+                const cy = y + cell[1];
+                if(cx < 0 || cx >= COLS) return true;
+                if(cy >= ROWS) return true;
+                if(cy >= 0 && grid[cy][cx]) return true;
+            }
+            return false;
+        }
+
+        // Lock piece to grid and handle clears/specials
+        function lockPiece(){
+            const p = current;
+            const matrix = p.shape[p.rot % p.shape.length];
+            for(const cell of matrix){
+                const cx = p.x + cell[0];
+                const cy = p.y + cell[1];
+                if(cy >= 0 && cy < ROWS && cx>=0 && cx<COLS){
+                    // store cell object {type,color,special}
+                    grid[cy][cx] = { type: p.type, color: COLORS[p.type], special: p.special };
+                }
+            }
+            // If bomb: explode center of the piece
+            if(p.special === 'B'){
+                // choose a central cell near head
+                const center = matrix[0]; // approximate
+                const cx = p.x + center[0];
+                const cy = p.y + center[1];
+                explodeBomb(cx, cy);
+            }
+            // apply gravity & clear lines
+            const cleared = clearLines();
+            // chaos effect sometimes
+            if(twistEnabled && cleared > 0 && Math.random() < 0.45){
+                applyChaos(cleared);
+            }
+
+            // spawn next piece
+            spawnPiece();
+        }
+
+        // explode bomb clearing 3x3 area producing many small blocks (converted to empties but spawn bonus)
+        function explodeBomb(cx, cy){
+            for(let r = cy-1; r<=cy+1; r++){
+                for(let c = cx-1; c<=cx+1; c++){
+                    if(r>=0 && r<ROWS && c>=0 && c<COLS){
+                        if(grid[r][c]) grid[r][c] = null;
+                    }
+                }
+            }
+            // little bonus points
+            score += 50;
+            note(880, 0.08, 0.08);
+        }
+
+        // Clear any full lines; returns number of cleared lines
+        function clearLines(){
+            let cleared = 0;
+            for(let r=ROWS-1; r>=0; r--){
+                const full = grid[r].every(cell => cell !== null && cell.type !== null);
+                if(full){
+                    // remove line r
+                    grid.splice(r,1);
+                    grid.unshift(Array(COLS).fill(null));
+                    cleared++;
+                    r++; // re-check same index because rows shifted
+                }
+            }
+            if(cleared>0){
+                // scoring
+                const points = {1:100,2:250,3:500,4:1200}[cleared] || cleared*400;
+                score += points * (1 + level*0.1);
+                lines += cleared;
+                combo++;
+                // increase level every 10 lines
+                const newLevel = Math.floor(lines/10);
+                if(newLevel > level){
+                    level = newLevel;
+                    tickInterval = Math.max(80, 800 - level*60 - parseInt(document.getElementById('selSpeed').value)*25);
+                }
+                statusText.textContent = `Cleared ${cleared} line(s)!`;
+                note(600 + cleared*60, 0.12, 0.08);
+            } else {
+                combo = 0;
+            }
+            updateUI();
+            return cleared;
+        }
+
+        // Chaos: random small board mutations — shift columns, rotate small region, or insert random food bricks
+        function applyChaos(cleared){
+            const mode = Math.random();
+            if(mode < 0.4){
+                // shift a random set of columns up/down a few rows
+                const col = Math.floor(Math.random()*COLS);
+                const dir = Math.random()<0.5 ? -1 : 1;
+                const amt = Math.floor(rand(1,3));
+                if(dir === -1){
+                    for(let i=0;i<amt;i++){
+                        const top = grid.shift();
+                        grid.push(Array(COLS).fill(null)); // push empty
+                    }
+                } else {
+                    for(let i=0;i<amt;i++){
+                        grid.unshift(Array(COLS).fill(null));
+                        grid.pop();
+                    }
+                }
+            } else if(mode < 0.8){
+                // rotate a small 3x3 block at random position
+                const r0 = Math.floor(Math.random() * (ROWS-2));
+                const c0 = Math.floor(Math.random() * (COLS-2));
+                // copy 3x3
+                const block = [];
+                for(let r=r0;r<r0+3;r++){ const row=[]; for(let c=c0;c<c0+3;c++){ row.push(grid[r][c]); } block.push(row); }
+                // rotate clockwise
+                for(let r=0;r<3;r++) for(let c=0;c<3;c++) grid[r0+r][c0+c] = block[2-c][r];
+            } else {
+                // randomly add a few single blocks (garbage)
+                for(let k=0;k<Math.min(4, cleared);k++){
+                    const r = Math.floor(Math.random()*(ROWS-4));
+                    const c = Math.floor(Math.random()*COLS);
+                    grid[r][c] = { type: 'G', color: '#666666', special: null };
+                }
+            }
+        }
+
+        // Moves
+        function move(dx){
+            if(!current) return;
+            if(!collides(current, current.x + dx, current.y, current.rot)){
+                current.x += dx;
+                note(600,0.03,0.02);
+            }
+        }
+        function softDrop(){
+            if(!current) return;
+            if(!collides(current, current.x, current.y+1, current.rot)){
+                current.y += 1;
+                score += 1;
+            } else {
+                // lock
+                lockPiece();
+            }
+        }
+        function hardDrop(){
+            if(!current) return;
+            while(!collides(current, current.x, current.y+1, current.rot)) {
+                current.y++;
+                score += 2;
+            }
+            lockPiece();
+        }
+        function rotate(dir){ // dir = +1 cw, -1 ccw
+            if(!current) return;
+            const newRot = (current.rot + dir + current.shape.length) % current.shape.length;
+            // basic wall-kick attempts
+            const kicks = [[0,0],[-1,0],[1,0],[-2,0],[2,0]];
+            for(const k of kicks){
+                if(!collides(current, current.x + k[0], current.y + k[1], newRot)){
+                    current.rot = newRot;
+                    current.x += k[0];
+                    note(880,0.03,0.02);
+                    return;
+                }
+            }
+        }
+
+        // Hold piece
+        function doHold(){
+            if(holdUsed) return;
+            if(!hold){
+                hold = { type: current.type, shape: current.shape, special: current.special };
+                spawnPiece();
+            } else {
+                // swap
+                const temp = { type: current.type, shape: current.shape, special: current.special };
+                // create piece from hold
+                current = { type: hold.type, shape: hold.shape, rot:0, x: Math.floor(COLS/2)-2, y: -1, special: hold.special };
+                hold = temp;
+                if(collides(current, current.x, current.y, current.rot)){
+                    // if collides after hold swap, game over
+                    running = false;
+                    statusText.textContent = 'Game Over';
+                }
+            }
+            holdUsed = true;
+            updateHoldCanvas();
+        }
+
+        // Utilities to draw grid & pieces
+        function drawCell(ctx, x, y, color){
+            ctx.fillStyle = color;
+            ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+            ctx.strokeRect(x*CELL+0.5, y*CELL+0.5, CELL-1, CELL-1);
+        }
+
+        function renderGrid(){
+            ctx.clearRect(0,0,canvas.width,canvas.height);
+            // background
+            ctx.fillStyle = '#071428';
+            ctx.fillRect(0,0,canvas.width,canvas.height);
+            // draw placed blocks
+            for(let r=0;r<ROWS;r++){
+                for(let c=0;c<COLS;c++){
+                    const cell = grid[r][c];
+                    if(cell){
+                        const col = cell.type === 'R' ? rainbowColor(c,r) : (cell.type==='G' ? '#666' : cell.color);
+                        drawCell(ctx, c, r, typeof col === 'string' ? col : '#fff');
+                        if(cell.type === 'R'){ // rainbow gradient
+                            // draw gradient overlay
+                            const g = ctx.createLinearGradient(c*CELL, r*CELL, (c+1)*CELL, (r+1)*CELL);
+                            g.addColorStop(0, '#ffd27f'); g.addColorStop(1, '#b2f7ff');
+                            ctx.fillStyle = g;
+                            ctx.fillRect(c*CELL, r*CELL, CELL, CELL);
+                        }
+                    } else {
+                        // empty cell subtle grid
+                        ctx.strokeStyle = 'rgba(255,255,255,0.02)';
+                        ctx.strokeRect(c*CELL+0.5, r*CELL+0.5, CELL-1, CELL-1);
+                    }
+                }
+            }
+
+            // Ghost piece
+            if(current){
+                let gy = current.y;
+                while(!collides(current, current.x, gy+1, current.rot)) gy++;
+                const shape = current.shape[current.rot % current.shape.length];
+                for(const cell of shape){
+                    const cx = current.x + cell[0], cy = gy + cell[1];
+                    if(cy >= 0) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.08)';
+                        ctx.fillRect(cx*CELL, cy*CELL, CELL, CELL);
+                    }
+                }
+            }
+
+            // Current piece
+            if(current){
+                const shape = current.shape[current.rot % current.shape.length];
+                for(const cell of shape){
+                    const cx = current.x + cell[0], cy = current.y + cell[1];
+                    if(cy >= 0){
+                        let col = COLORS[current.type];
+                        if(current.type === 'R'){
+                            // draw rainbow gradient cell
+                            const g = ctx.createLinearGradient(cx*CELL, cy*CELL, (cx+1)*CELL, (cy+1)*CELL);
+                            g.addColorStop(0,'#ffd27f'); g.addColorStop(1,'#b2f7ff');
+                            ctx.fillStyle = g;
+                        } else if(col === 'linear'){
+                            ctx.fillStyle = '#ffd27f';
+                        } else {
+                            ctx.fillStyle = col;
+                        }
+                        ctx.fillRect(cx*CELL, cy*CELL, CELL, CELL);
+                        ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+                        ctx.strokeRect(cx*CELL+0.5, cy*CELL+0.5, CELL-1, CELL-1);
+                    }
+                }
+            }
+        }
+
+        function rainbowColor(c,r){
+            const t = (c + r + performance.now()/500)%10 / 10;
+            const hue = Math.floor(200 + t*160);
+            return `hsl(${hue},90%,65%)`;
+        }
+
+        //	Draw next pieces
+        function renderNext(){
+            nctx.clearRect(0,0,nextCanvas.width,nextCanvas.height);
+            nctx.fillStyle = 'rgba(255,255,255,0.02)';
+            nctx.fillRect(0,0,nextCanvas.width,nextCanvas.height);
+            nctx.save();
+            nctx.scale(1,1);
+            // draw up to next 4
+            const boxSize = 32;
+            for(let i=0;i<4;i++){
+                const p = queue[i] || null;
+                const yy = 10 + i*76;
+                if(!p) continue;
+                // small representation: draw shape centered
+                const shape = PIECES[p][0];
+                const offsetX = 40, offsetY = yy + 20;
+                for(const cell of shape){
+                    const cx = offsetX + (cell[0])*boxSize;
+                    const cy = offsetY + (cell[1])*boxSize;
+                    nctx.fillStyle = COLORS[p] === 'linear' ? '#ffd27f' : COLORS[p] || '#fff';
+                    nctx.fillRect(cx, cy, boxSize-6, boxSize-6);
+                    nctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                    nctx.strokeRect(cx+0.5, cy+0.5, boxSize-6, boxSize-6);
+                }
+                nctx.fillStyle = '#fff'; nctx.font='12px system-ui';
+                nctx.fillText(p, 10 + i*0 + 6, yy+18);
+            }
+            nctx.restore();
+        }
+
+        function renderHold(){
+            hctx.clearRect(0,0,holdCanvas.width,holdCanvas.height);
+            hctx.fillStyle = 'rgba(255,255,255,0.02)';
+            hctx.fillRect(0,0,holdCanvas.width,holdCanvas.height);
+            if(!hold) return;
+            const p = hold.type;
+            const shape = hold.shape[0];
+            const box = 24;
+            const offsetX = 30, offsetY = 30;
+            for(const cell of shape){
+                const cx = offsetX + cell[0]*box;
+                const cy = offsetY + cell[1]*box;
+                hctx.fillStyle = COLORS[p] === 'linear' ? '#ffd27f' : COLORS[p] || '#fff';
+                hctx.fillRect(cx, cy, box-4, box-4);
+                hctx.strokeStyle = 'rgba(0,0,0,0.2)';
+                hctx.strokeRect(cx+0.5, cy+0.5, box-4, box-4);
+            }
+        }
+
+        function updateUI(){
+            scoreEl.textContent = Math.floor(score);
+            linesEl.textContent = lines;
+            levelEl.textContent = level;
+            renderNext(); renderHold();
+        }
+
+        // Game loop tick
+        function tick(){
+            if(!running || paused) return;
+            const nowT = performance.now();
+            if(nowT - lastTick >= tickInterval){
+                lastTick = nowT;
+                // gravity step
+                if(!current) spawnPiece();
+                else {
+                    if(!collides(current, current.x, current.y+1, current.rot)){
+                        current.y++;
+                    } else {
+                        // lock
+                        lockPiece();
+                    }
+                }
+            }
+            renderGrid();
+            updateUI();
+        }
+
+        // Input handling
+        const keys = {};
+        window.addEventListener('keydown', (e)=>{
+            if(!running) return;
+            if(e.key === 'p'){ paused = !paused; document.getElementById('btnPause').textContent = paused ? 'Resume' : 'Pause'; return; }
+            if(paused) return;
+            if(keys[e.key]) return; // key repeat simplified handling
+            keys[e.key] = true;
+            if(e.key === 'ArrowLeft') move(-1);
+            if(e.key === 'ArrowRight') move(1);
+            if(e.key === 'ArrowDown') { softDrop(); }
+            if(e.key === ' ') { hardDrop(); e.preventDefault(); }
+            if(e.key === 'z' || e.key === 'Z') rotate(-1);
+            if(e.key === 'x' || e.key === 'X' || e.key === 'ArrowUp') rotate(1);
+            if(e.key === 'c' || e.key === 'C') doHold();
+        });
+        window.addEventListener('keyup', (e) => { keys[e.key] = false; });
+
+        // Buttons
+        document.getElementById('btnStart').addEventListener('click', ()=>startGame());
+        document.getElementById('btnRestart').addEventListener('click', ()=>resetGame());
+        document.getElementById('btnPause').addEventListener('click', function(){
+            paused = !paused;
+            this.textContent = paused ? 'Resume' : 'Pause';
+        });
+        document.getElementById('btnSound').addEventListener('click', function(){
+            soundOn = !soundOn;
+            this.textContent = soundOn ? '🔊 On' : '🔈 Off';
+        });
+        document.getElementById('chkTwist').addEventListener('change', (e)=>{
+            twistEnabled = e.target.checked;
+        });
+
+        document.getElementById('selSpeed').addEventListener('change', (e)=>{
+            const extra = parseInt(e.target.value,10);
+            tickInterval = Math.max(80, 800 - level*60 - extra*25);
+        });
+
+        // Start / reset
+        function startGame(){
+            resetGame();
+            running = true;
+            paused = false;
+            lastTick = performance.now();
+            statusText.textContent = 'Playing';
+            note(880,0.06,0.06);
+        }
+        function resetGame(){
+            grid = createGrid(ROWS, COLS);
+            queue = []; fillQueue();
+            hold = null; holdUsed = false;
+            score = 0; lines = 0; level = 0; combo = 0;
+            tickInterval = Math.max(80, 800 - parseInt(document.getElementById('selSpeed').value,10)*25);
+            current = null; running = false; paused = false;
+            document.getElementById('btnPause').textContent = 'Pause';
+            updateUI();
+            renderGrid();
+            statusText.textContent = 'Ready';
+        }
+
+        // Small helper for random / timing
+        function rand(min, max){ return Math.random()*(max-min)+min; }
+
+        // Start animation loop
+        function mainLoop(){
+            tick();
+            requestAnimationFrame(mainLoop);
+        }
+
+        // Initialize
+        fillQueue();
+        updateUI();
+        resetGame();
+        mainLoop();
+
+        // Utility: simple randomness helper
+        function randInt(a,b){ return Math.floor(rand(a,b+1)); }
+
+    })();
+</script>
+</body>
+</html>

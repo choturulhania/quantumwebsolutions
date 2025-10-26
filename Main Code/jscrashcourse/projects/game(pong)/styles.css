@@ -1,0 +1,65 @@
+/* Reset */
+body, h1, canvas {
+    margin: 0;
+    padding: 0;
+}
+
+/* Body styling */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(120deg, #141e30, #243b55);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* Header */
+header h1 {
+    font-size: 2.5em;
+    background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+    background-size: 800% 800%;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: gradientShift 12s ease infinite;
+    text-align: center;
+    margin: 30px 0 20px;
+}
+
+@keyframes gradientShift {
+    0% { background-position: 0% 50% }
+    50% { background-position: 100% 50% }
+    100% { background-position: 0% 50% }
+}
+
+/* Main content */
+main {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1;
+}
+
+/* Canvas styled like main UI */
+canvas {
+    border-radius: 20px;
+    padding: 10px;
+    background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+    background-size: 600% 600%;
+    animation: gradientShift 15s ease infinite;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.6), 0 0 20px rgba(255,255,255,0.15);
+    display: block;
+}
+
+/* Optional: frame around the black playfield */
+canvas::before {
+    content: "";
+    position: absolute;
+    width: inherit;
+    height: inherit;
+    border-radius: 20px;
+    z-index: -1;
+}

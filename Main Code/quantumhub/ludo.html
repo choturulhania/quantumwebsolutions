@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ludo Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            height: 100vh;
+            justify-content: center;
+        }
+
+        h1 {
+            text-shadow: 0 0 20px #0ff;
+            margin-bottom: 20px;
+        }
+
+        #diceBtn {
+            margin: 10px 0;
+            padding: 10px 25px;
+            border: none;
+            border-radius: 20px;
+            background-color: #0ff;
+            color: #111;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 0 20px #0ff;
+            transition: transform 0.2s;
+        }
+
+        #diceBtn:hover {
+            transform: scale(1.1);
+        }
+
+        #diceResult {
+            font-size: 2rem;
+            margin-bottom: 20px;
+            text-shadow: 0 0 15px #ff0;
+        }
+
+        #board {
+            display: grid;
+            grid-template-columns: repeat(15, 30px);
+            grid-template-rows: repeat(15, 30px);
+            gap: 2px;
+        }
+
+        .cell {
+            width: 30px;
+            height: 30px;
+            background-color: #222;
+            border-radius: 5px;
+            box-shadow: 0 0 5px #0ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .player1 {
+            background-color: #ff0;
+            box-shadow: 0 0 15px #ff0;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+        }
+
+        .player2 {
+            background-color: #f0f;
+            box-shadow: 0 0 15px #f0f;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Ludo Game</h1>
+<button id="diceBtn">Roll Dice</button>
+<div id="diceResult">Dice: 0</div>
+<div id="board"></div>
+
+<script>
+    const board = document.getElementById('board');
+    const diceBtn = document.getElementById('diceBtn');
+    const diceResult = document.getElementById('diceResult');
+
+    const cells = [];
+    let playerPositions = [0, 0]; // player1 and player2 positions on the board
+    let currentPlayer = 0; // 0 = player1, 1 = player2
+    const totalCells = 52; // simplified Ludo path
+
+    // Create board cells
+    for (let i = 0; i < totalCells; i++) {
+        const cell = document.createElement('div');
+        cell.classList.add('cell');
+        board.appendChild(cell);
+        cells.push(cell);
+    }
+
+    // Update board with player positions
+    function updateBoard() {
+        cells.forEach(cell => cell.innerHTML = '');
+        if (playerPositions[0] > 0) cells[playerPositions[0]-1].innerHTML = '<div class="player1"></div>';
+        if (playerPositions[1] > 0) cells[playerPositions[1]-1].innerHTML = '<div class="player2"></div>';
+    }
+
+    // Roll dice
+    diceBtn.addEventListener('click', () => {
+        const roll = Math.floor(Math.random() * 6) + 1;
+        diceResult.textContent = `Dice: ${roll}`;
+
+        // Move current player
+        if (playerPositions[currentPlayer] === 0 && roll !== 6) {
+            // Player needs a 6 to start
+            alert(`Player ${currentPlayer + 1} needs a 6 to start!`);
+        } else {
+            if (playerPositions[currentPlayer] === 0) playerPositions[currentPlayer] = 1;
+            else playerPositions[currentPlayer] += roll;
+
+            if (playerPositions[currentPlayer] > totalCells) playerPositions[currentPlayer] = totalCells;
+
+            updateBoard();
+
+            // Check win
+            if (playerPositions[currentPlayer] === totalCells) {
+                alert(`Player ${currentPlayer + 1} wins!`);
+                playerPositions = [0, 0];
+                updateBoard();
+                return;
+            }
+
+            // Switch player unless rolled a 6
+            if (roll !== 6) currentPlayer = currentPlayer === 0 ? 1 : 0;
+        }
+    });
+
+    updateBoard();
+</script>
+
+</body>
+</html>

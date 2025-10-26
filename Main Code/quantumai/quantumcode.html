@@ -1,0 +1,518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Code Playground ✧</title>
+
+    <!-- Prism for syntax highlighting -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-c.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-markup.min.js"></script> <!-- html -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-csharp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-rust.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ruby.min.js"></script>
+
+    <style>
+        /* === base / original font & button vibe preserved === */
+        :root{
+            --bg-1:#0f1720;
+            --bg-2:#111826;
+            --panel:#1e2936;
+            --panel-2:#202b38;
+            --muted:#9aa3ad;
+            --accent-blue:#7f9bff; /* used on main action button (kept style) */
+            --accent-blue-2:#6f86ff;
+            --card:#24313a;
+        }
+
+        html,body{
+            margin:0;
+            font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color:#e6eef7;
+            overflow:auto;
+            height:auto;
+        }
+
+        /* New: Enable smooth scrolling on the main page scroll and for elements */
+        html {
+            scroll-behavior: smooth;
+        }
+
+        header{padding:28px 60px 6px}
+        header h1 {
+            font-size: 3em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+            margin: 30px 0 40px;
+        }
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+        main { display:flex; gap:22px; padding: 16px 60px 36px; box-sizing:border-box; height: calc(100% - 110px); }
+
+        /* left column (editor + controls + output) */
+        .left {
+            flex: 1 1 68%;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            min-width: 0;
+        }
+
+        .top-bar {
+            display:flex;
+            gap:12px;
+            align-items:center;
+            background: rgba(255,255,255,0.02);
+            padding:14px;
+            border-radius:16px;
+            box-shadow: 0 6px 22px rgba(2,6,23,0.6);
+        }
+
+        .select-wrap {
+            position: relative;
+            min-width: 170px;
+            background: rgba(0,0,0,0.15);
+            border-radius: 12px;
+            padding: 8px 14px;
+            display:flex;align-items:center;
+        }
+        .select-wrap select{
+            background: transparent; border: none; color: #e6eef7; font-weight:600; font-size:15px;
+            outline:none; appearance:none; -webkit-appearance:none; -moz-appearance:none;
+        }
+        .title-input {
+            flex:1; margin-left:6px;
+            background: rgba(255,255,255,0.02);
+            border-radius: 26px;
+            padding: 12px 16px;
+            border: none;
+            color: #c8d4df;
+            font-size: 15px;
+            outline: none;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+        }
+
+        .btn {
+            display:inline-flex; align-items:center; gap:8px;
+            padding: 10px 18px; font-weight:700; border-radius:28px; cursor:pointer;
+            border:none; color:#071024;
+            box-shadow: 0 6px 18px rgba(79,99,255,0.12); font-size:15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+        }
+
+        /* editor window card */
+        .editor-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            border-radius: 14px;
+            padding: 10px;
+            box-shadow: 0 6px 30px rgba(0,0,0,0.5);
+            display:flex; flex-direction:column; gap:8px; min-height: 360px;
+        }
+
+        .window-top {
+            display:flex; justify-content:space-between; align-items:center; padding: 8px 12px;
+            border-radius:10px 10px 0 0; background: rgba(0,0,0,0.08);
+        }
+        .traffic {
+            display:flex; gap:8px; align-items:center;
+        }
+        .dot { width:12px;height:12px;border-radius:50%; display:inline-block}
+        .red{background:#ff5f56}.yellow{background:#ffbd2e}.green{background:#29c63d}
+
+        .copy-btn {
+            background: rgba(255,255,255,0.03); color:#cfe8ff; padding:8px 10px; border-radius:12px; font-weight:700;
+            border: none; cursor:pointer;
+        }
+
+        /* textarea overlay + prism highlight for syntax coloring */
+        .editor-body {
+            position:relative; flex:1; display:block; min-height:0;
+        }
+
+        textarea#code {
+            position:absolute; inset:0; width:100%; height:100%; resize:none;
+            background: transparent; color: transparent; caret-color: #e6eef7; border:none;
+            padding:24px; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+            font-size:15px; line-height:1.6; outline:none; z-index:3;
+        }
+
+        pre.code-highlight {
+            margin:0; padding:20px 22px; border-radius:10px; overflow:auto;
+            height:100%; box-sizing:border-box; background: rgba(12,20,28,0.25);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+            font-size:15px; line-height:1.6; color: #d6eaff; z-index:1;
+            scroll-behavior: smooth;.sni
+        }
+
+        /* big Run button */
+        .run-wrap { display:flex; align-items:center; justify-content:center; margin-top:0; }
+        .run-btn {
+            width:100%;
+            height:42px;
+            border-radius:32px;
+            border:none;
+            cursor:pointer;
+            font-weight:800;
+            font-size:18px;
+            color: #071024;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            box-shadow: 0 8px 20px rgba(83,101,255,0.12);
+        }
+
+        /* output card */
+        .output-card {
+            background: linear-gradient(180deg, rgba(0,0,0,0.08), rgba(0,0,0,0.03));
+            border-radius:12px;
+            padding: 18px;
+            box-shadow: 0 6px 30px rgba(0,0,0,0.45);
+            color:#dbe8ff;
+        }
+        .output-header { display:flex; align-items:center; gap:10px; color:#aee0a9; font-weight:700; margin-bottom:10px; }
+        .output-body { background: rgba(0,0,0,0.6); padding:18px; border-radius:10px; color:#c8d4df; min-height:60px; font-family:ui-monospace,monospace; font-size:15px; }
+
+        /* right column (saved snippets) */
+        .right {
+            flex: 0 0 34%;
+            min-width: 320px;
+        }
+
+        .snippets-card {
+            background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+            padding:20px; border-radius:14px; height:100%; box-shadow: 0 6px 30px rgba(0,0,0,0.5);
+            display:flex; flex-direction:column;
+        }
+        .snippets-card h3 { margin:0 0 14px 0; color:#e6eef7; font-size:20px }
+        .snippets-list {
+            flex:1; overflow:auto; color:var(--muted); display:flex; flex-direction:column; gap:10px;
+            scroll-behavior: smooth;
+        }
+        .snippet-item { background: rgba(0,0,0,0.04); padding:12px 14px;border-radius:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+        .snippet-item .meta { display:flex; gap:8px; align-items:center; }
+        .snippet-title { font-weight:700; color:#dbe8ff; }
+        .snippet-actions { display:flex; gap:8px; align-items:center; }
+        .small-btn { background: rgba(255,255,255,0.03); border-radius:10px; padding:6px 8px; border:none; color:#dcecff; cursor:pointer; font-weight:700 }
+
+        /* responsive */
+        @media (max-width: 1000px){
+            main { flex-direction:column; padding:16px; height: auto; }
+            .right { min-width:unset; width:100% }
+            header{padding-top:18px}
+        }
+    </style>
+</head>
+<body>
+<header><h1>Quantum Code</h1></header>
+
+<main>
+    <div class="left">
+        <div class="top-bar">
+            <div class="select-wrap">
+                <select id="langSelect" aria-label="language">
+                    <option>Python</option>
+                    <option>JavaScript</option>
+                    <option>Java</option>
+                    <option>C</option>
+                    <option>C++</option>
+                    <option>HTML</option>
+                    <option>C#</option>
+                    <option>Go</option>
+                    <option>Rust</option>
+                    <option>Ruby</option>
+                </select>
+            </div>
+
+            <input class="title-input" id="snippetTitle" placeholder="Snippet title..." />
+
+            <button id="saveBtn" class="btn" title="Save snippet">
+                💾 Save
+            </button>
+            <button id="downloadBtn" class="btn" style="background:transparent;color:#cfe8ff;box-shadow:none;border:1px solid rgba(255,255,255,0.04);font-weight:700">Download</button>
+        </div>
+
+        <div class="editor-card">
+            <div class="window-top">
+                <div class="traffic">
+                    <span class="dot red"></span>
+                    <span class="dot yellow"></span>
+                    <span class="dot green"></span>
+                </div>
+                <div>
+                    <button id="copyBtn" class="copy-btn">📋 Copy</button>
+                </div>
+            </div>
+
+            <div class="editor-body">
+                <!-- Prism highlight layer -->
+                <pre class="code-highlight language-python" id="highlight"><code class="language-python" id="codeHighlight"></code></pre>
+                <!-- Actual textarea where user types (transparent text color, caret visible) -->
+                <textarea id="code" spellcheck="false" autofocus></textarea>
+            </div>
+        </div>
+
+        <div class="run-wrap">
+            <button id="runBtn" class="run-btn">▶ Run Code</button>
+        </div>
+
+        <div class="output-card" style="margin-top:8px;">
+            <div class="output-header"><span style="width:10px;height:10px;background:#29c63d;border-radius:50%;display:inline-block"></span><div>Output</div></div>
+            <div id="output" class="output-body">Ready. Hit Run to execute your code.</div>
+        </div>
+    </div>
+
+    <div class="right">
+        <div class="snippets-card">
+            <h3>Saved Snippets</h3>
+            <div id="snippetsList" class="snippets-list">
+                <div style="color:var(--muted);padding-top:6px">No saved snippets for the selected language.</div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    /* ===== language mapping for piston and prism class names ===== */
+    const LANG_MAP = {
+        "Python": { piston: "python3", prism: "python", ext: "py" },
+        "JavaScript": { piston: "javascript", prism: "javascript", ext: "js" },
+        "Java": { piston: "java", prism: "java", ext: "java" },
+        "C": { piston: "c", prism: "c", ext: "c" },
+        "C++": { piston: "cpp", prism: "cpp", ext: "cpp" },
+        "HTML": { piston: "html", prism: "markup", ext: "html" },
+        "C#": { piston: "csharp", prism: "csharp", ext: "cs" },
+        "Go": { piston: "go", prism: "go", ext: "go" },
+        "Rust": { piston: "rust", prism: "rust", ext: "rs" },
+        "Ruby": { piston: "ruby", prism: "ruby", ext: "rb" }
+    };
+
+    const textarea = document.getElementById('code');
+    const highlight = document.getElementById('codeHighlight');
+    const pre = document.getElementById('highlight');
+    const langSelect = document.getElementById('langSelect');
+    const runBtn = document.getElementById('runBtn');
+    const outputEl = document.getElementById('output');
+    const saveBtn = document.getElementById('saveBtn');
+    const snippetsList = document.getElementById('snippetsList');
+    const snippetTitle = document.getElementById('snippetTitle');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+
+    /* initialize with small examples per language */
+    const EXAMPLES = {
+        "Python": '# Type your Python here\nprint("Hello from Python!")',
+        "JavaScript": 'console.log("Hello from JavaScript!")',
+        "Java": 'class Main {\n  public static void main(String[] args) {\n    System.out.println("Hello from Java!");\n  }\n}',
+        "C": '#include <stdio.h>\nint main(){ printf("Hello from C!\\n"); return 0; }',
+        "C++": '#include <iostream>\nint main(){ std::cout << "Hello from C++!" << std::endl; return 0; }',
+        "HTML": '<!doctype html>\n<html><body><h1>Hello from HTML</h1></body></html>',
+        "C#": 'using System; class Program { static void Main(){ Console.WriteLine("Hello from C#"); } }',
+        "Go": 'package main\nimport "fmt"\nfunc main(){ fmt.Println("Hello from Go") }',
+        "Rust": 'fn main(){ println!("Hello from Rust"); }',
+        "Ruby": 'puts "Hello from Ruby"'
+    };
+
+    function setPrismLanguage(langName){
+        const map = LANG_MAP[langName];
+        pre.className = 'code-highlight language-' + map.prism;
+        highlight.className = 'language-' + map.prism;
+    }
+
+    function setExampleForLanguage(langName){
+        const ex = EXAMPLES[langName] || '';
+        textarea.value = ex;
+        updateHighlight();
+    }
+
+    /* highlight sync */
+    function escapeHtml(s){
+        return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function updateHighlight(){
+        const langName = langSelect.value;
+        const prismLang = LANG_MAP[langName].prism;
+        const code = textarea.value;
+        highlight.innerHTML = escapeHtml(code);
+        // re-run prism highlight on dynamic content
+        Prism.highlightElement(highlight);
+    }
+
+    /* sync scroll */
+    textarea.addEventListener('scroll', () => {
+        pre.scrollTop = textarea.scrollTop;
+        pre.scrollLeft = textarea.scrollLeft;
+    });
+
+    /* typing updates highlight (debounced a little) */
+    let debounceTimer = null;
+    textarea.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(updateHighlight, 50);
+    });
+
+    /* language change */
+    langSelect.addEventListener('change', () => {
+        setPrismLanguage(langSelect.value);
+        setExampleForLanguage(langSelect.value);
+        loadSnippetsList();
+        snippetTitle.value = '';
+    });
+
+    /* copy to clipboard */
+    copyBtn.addEventListener('click', async () => {
+        try{
+            await navigator.clipboard.writeText(textarea.value);
+            copyBtn.textContent = 'Copied ✓';
+            setTimeout(()=> copyBtn.textContent = '📋 Copy', 1400);
+        } catch(e){
+            alert('Unable to copy');
+        }
+    });
+
+    /* download file */
+    downloadBtn.addEventListener('click', () => {
+        const lang = langSelect.value;
+        const ext = LANG_MAP[lang].ext || 'txt';
+        const blob = new Blob([textarea.value], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = (snippetTitle.value ? snippetTitle.value : 'snippet') + '.' + ext;
+        a.click();
+    });
+
+    /* snippets stored in localStorage under "snippets_<lang>" as JSON array of {title,code,created} */
+    function saveSnippet(){
+        const lang = langSelect.value;
+        const title = snippetTitle.value.trim() || ('Untitled ' + new Date().toLocaleString());
+        const code = textarea.value;
+        const key = 'snippets_' + lang;
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        arr.unshift({ title, code, created: Date.now() });
+        localStorage.setItem(key, JSON.stringify(arr.slice(0,200))); // cap
+        snippetTitle.value = '';
+        loadSnippetsList();
+        saveBtn.textContent = 'Saved ✓';
+        setTimeout(()=> saveBtn.textContent = '💾 Save', 1200);
+    }
+
+    /* load snippets list for selected language */
+    function loadSnippetsList(){
+        const lang = langSelect.value;
+        const key = 'snippets_' + lang;
+        const arr = JSON.parse(localStorage.getItem(key) || '[]');
+        snippetsList.innerHTML = '';
+        if (!arr.length){
+            const el = document.createElement('div');
+            el.style.color = 'var(--muted)';
+            el.style.paddingTop = '6px';
+            el.textContent = 'No saved snippets for ' + lang + '.';
+            snippetsList.appendChild(el);
+            return;
+        }
+
+        arr.forEach((s, idx) => {
+            const item = document.createElement('div');
+            item.className = 'snippet-item';
+            item.title = s.title;
+            item.onclick = () => {
+                textarea.value = s.code;
+                updateHighlight();
+            };
+
+            const meta = document.createElement('div');
+            meta.className = 'meta';
+            const tt = document.createElement('div');
+            tt.className = 'snippet-title';
+            tt.textContent = s.title;
+            meta.appendChild(tt);
+
+            const act = document.createElement('div');
+            act.className = 'snippet-actions';
+
+            const loadBtn = document.createElement('button');
+            loadBtn.className = 'small-btn';
+            loadBtn.textContent = 'Load';
+            loadBtn.onclick = (e) => { e.stopPropagation(); textarea.value = s.code; updateHighlight(); };
+
+            const delBtn = document.createElement('button');
+            delBtn.className = 'small-btn';
+            delBtn.textContent = 'Del';
+            delBtn.onclick = (e) => {
+                e.stopPropagation();
+                if (!confirm('Delete snippet "' + s.title + '"?')) return;
+                arr.splice(idx,1);
+                localStorage.setItem(key, JSON.stringify(arr));
+                loadSnippetsList();
+            };
+
+            act.appendChild(loadBtn);
+            act.appendChild(delBtn);
+
+            item.appendChild(meta);
+            item.appendChild(act);
+            snippetsList.appendChild(item);
+        });
+    }
+
+    /* run code using Piston API (execute) */
+    async function runCode(){
+        const langName = langSelect.value;
+        const map = LANG_MAP[langName];
+        const pistonLang = map.piston;
+        const code = textarea.value;
+
+        outputEl.textContent = 'Running...';
+        try{
+            const resp = await fetch('https://emkc.org/api/v2/piston/execute', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ language: pistonLang, version: "*", files: [{ name: "main." + (map.ext || "txt"), content: code }] })
+            });
+
+            if (!resp.ok){
+                const text = await resp.text().catch(()=> '[no body]');
+                outputEl.textContent = `Execution service error: ${resp.status} ${resp.statusText}\n${text}`;
+                return;
+            }
+
+            const data = await resp.json();
+            // piston shape has run.output
+            let out = '';
+            if (data && data.run && typeof data.run.output === 'string') out = data.run.output;
+            else if (data && data.output) out = Array.isArray(data.output) ? data.output.join('\n') : String(data.output);
+            else out = JSON.stringify(data).slice(0,2000);
+
+            outputEl.textContent = out || '(no output)';
+        } catch(err){
+            outputEl.textContent = 'Error: ' + err.message;
+        }
+    }
+
+    /* attach events */
+    runBtn.addEventListener('click', runCode);
+    saveBtn.addEventListener('click', saveSnippet);
+
+    /* initial load */
+    (function init(){
+        setPrismLanguage(langSelect.value);
+        setExampleForLanguage(langSelect.value);
+        loadSnippetsList();
+    })();
+
+</script>
+</body>
+</html>

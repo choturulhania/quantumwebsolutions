@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ping Pong Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: 'Arial', sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+
+        canvas {
+            background-color: #222;
+            border: 3px solid #fff;
+            border-radius: 15px;
+            box-shadow: 0 0 20px #0ff;
+        }
+
+        #score {
+            position: absolute;
+            top: 20px;
+            font-size: 2rem;
+            text-shadow: 0 0 10px #0ff;
+        }
+    </style>
+</head>
+<body>
+
+<div id="score">Player: 0 | AI: 0</div>
+<canvas id="gameCanvas" width="800" height="500"></canvas>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    let playerScore = 0;
+    let aiScore = 0;
+
+    // Paddle properties
+    const paddleWidth = 15, paddleHeight = 100;
+    let playerY = canvas.height / 2 - paddleHeight / 2;
+    let aiY = canvas.height / 2 - paddleHeight / 2;
+    const paddleSpeed = 6;
+
+    // Ball properties
+    let ballX = canvas.width / 2;
+    let ballY = canvas.height / 2;
+    let ballRadius = 10;
+    let ballSpeedX = 5;
+    let ballSpeedY = 4;
+
+    // Controls
+    const keys = {};
+
+    // Event listeners
+    document.addEventListener('keydown', e => keys[e.key] = true);
+    document.addEventListener('keyup', e => keys[e.key] = false);
+
+    // Draw functions
+    function drawPaddle(x, y) {
+        ctx.fillStyle = "#0ff";
+        ctx.fillRect(x, y, paddleWidth, paddleHeight);
+        ctx.shadowColor = "#0ff";
+        ctx.shadowBlur = 20;
+    }
+
+    function drawBall() {
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+        ctx.fillStyle = "#ff0";
+        ctx.fill();
+        ctx.shadowColor = "#ff0";
+        ctx.shadowBlur = 20;
+        ctx.closePath();
+    }
+
+    // Update function
+    function update() {
+        // Move player paddle
+        if (keys["ArrowUp"] && playerY > 0) playerY -= paddleSpeed;
+        if (keys["ArrowDown"] && playerY + paddleHeight < canvas.height) playerY += paddleSpeed;
+
+        // Move AI paddle (simple AI)
+        if (aiY + paddleHeight / 2 < ballY) aiY += paddleSpeed * 0.6;
+        if (aiY + paddleHeight / 2 > ballY) aiY -= paddleSpeed * 0.6;
+
+        // Move ball
+        ballX += ballSpeedX;
+        ballY += ballSpeedY;
+
+        // Collision with top/bottom walls
+        if (ballY - ballRadius < 0 || ballY + ballRadius > canvas.height) {
+            ballSpeedY = -ballSpeedY;
+        }
+
+        // Collision with paddles
+        if (ballX - ballRadius < paddleWidth && ballY > playerY && ballY < playerY + paddleHeight) {
+            ballSpeedX = -ballSpeedX;
+        }
+        if (ballX + ballRadius > canvas.width - paddleWidth && ballY > aiY && ballY < aiY + paddleHeight) {
+            ballSpeedX = -ballSpeedX;
+        }
+
+        // Score points
+        if (ballX < 0) {
+            aiScore++;
+            resetBall();
+        }
+        if (ballX > canvas.width) {
+            playerScore++;
+            resetBall();
+        }
+
+        // Update score display
+        document.getElementById("score").innerText = `Player: ${playerScore} | AI: ${aiScore}`;
+    }
+
+    // Reset ball to center
+    function resetBall() {
+        ballX = canvas.width / 2;
+        ballY = canvas.height / 2;
+        ballSpeedX = -ballSpeedX;
+        ballSpeedY = 4 * (Math.random() > 0.5 ? 1 : -1);
+    }
+
+    // Draw everything
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        drawPaddle(0, playerY);
+        drawPaddle(canvas.width - paddleWidth, aiY);
+        drawBall();
+    }
+
+    // Game loop
+    function gameLoop() {
+        update();
+        draw();
+        requestAnimationFrame(gameLoop);
+    }
+
+    // Start game
+    gameLoop();
+</script>
+
+</body>
+</html>

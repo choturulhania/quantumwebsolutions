@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Quantum Learning</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        html, body { margin: 0; height: 100%; background: linear-gradient(120deg, #141e30, #243b55); color: #fff; }
+        body { display: flex; flex-direction: column; align-items: center; padding: 20px; min-height: 100vh; }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        header h1 {
+            font-size: 3em;
+            margin-bottom: 30px;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+        }
+
+        /* Card container */
+        .card-container {
+            display: grid;
+            /* Default: multi-column layout with a minimum width of 220px per card */
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 24px;
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 20px;
+        }
+
+        /* Course card */
+        .course-card {
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            border-radius: 16px;
+            padding: 24px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+            border: 1px solid rgba(255,255,255,0.05);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.35);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+        .course-card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 35px rgba(0,0,0,0.5), 0 0 20px rgba(66, 255, 190, 0.15);
+        }
+
+        .course-card i {
+            font-size: 2.5em;
+            background: linear-gradient(270deg, #43e97b, #38f9d7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 10s ease infinite;
+        }
+
+        .course-card h2 {
+            font-size: 1.5em;
+            margin: 0;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 10s ease infinite;
+        }
+
+        .course-card p {
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.4;
+        }
+
+        /* --- Mobile/Phone View Optimization --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px; /* Reduce overall padding */
+            }
+
+            header h1 {
+                font-size: 2em; /* Smaller header on tiny screens */
+                margin-bottom: 20px;
+            }
+
+            .card-container {
+                /* Force a single column for the cards on small screens */
+                grid-template-columns: 1fr;
+                gap: 15px; /* Slightly less gap on mobile */
+            }
+
+            .course-card {
+                padding: 20px; /* Reduce card padding */
+            }
+        }
+        /* ------------------------------------- */
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Quantum Learning</h1>
+</header>
+
+<div class="card-container">
+    <div class="course-card" data-course="french">
+        <i class="fas fa-language"></i>
+        <h2>French</h2>
+        <p>Learn French basics, grammar, and conversation skills for beginners and beyond.</p>
+    </div>
+    <div class="course-card" data-course="math">
+        <i class="fas fa-square-root-alt"></i>
+        <h2>Math</h2>
+        <p>Explore algebra, geometry, calculus, and problem-solving techniques step by step.</p>
+    </div>
+    <div class="course-card" data-course="spanish">
+        <i class="fas fa-globe"></i>
+        <h2>Spanish</h2>
+        <p>Master Spanish language essentials, vocabulary, and practical communication skills.</p>
+    </div>
+    <div class="course-card" data-course="hindi">
+        <i class="fas fa-comment-dots"></i>
+        <h2>Hindi</h2>
+        <p>Beginner to advanced Hindi lessons, including writing, speaking, and grammar practice.</p>
+    </div>
+    <div class="course-card" data-course="mandarin">
+        <i class="fas fa-chess-board"></i>
+        <h2>Mandarin</h2>
+        <p>Learn Mandarin Chinese with tones, characters, and conversational phrases.</p>
+    </div>
+    <div class="course-card" data-course="gamehub">
+        <i class="fas fa-gamepad"></i>
+        <h2>Game Hub</h2>
+        <p>Dive into gaming tutorials, strategies, and development tips for various platforms.</p>
+    </div>
+    <div class="course-card" data-course="coding">
+        <i class="fas fa-code"></i>
+        <h2>Coding &lt;/&gt;</h2>
+        <p>Hands-on programming lessons for beginners to advanced coders.</p>
+    </div>
+</div>
+
+<script>
+    const courses = {
+        french:   "courses/french/french.html",
+        math:     "courses/math/math.html",
+        spanish:  "courses/spanish/spanish.html",
+        hindi:    "courses/hindi/hindi.html",
+        mandarin: "courses/mandarin/mandarin.html",
+        gamehub:  "courses/gamehub/gamehub.html",
+        coding:   "courses/gamehub/coding.html"  // your original file
+    };
+
+    document.addEventListener("DOMContentLoaded", () => {
+        document.querySelectorAll(".course-card").forEach(card => {
+            card.addEventListener("click", () => {
+                const course = card.getAttribute("data-course");
+                const url = courses[course];
+                if (!url) {
+                    alert("Course not available yet.");
+                    return;
+                }
+                // Replace the whole page
+                window.location.href = url;
+            });
+        });
+    });
+</script>
+
+</body>
+</html>

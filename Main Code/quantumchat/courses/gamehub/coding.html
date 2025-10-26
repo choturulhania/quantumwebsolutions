@@ -1,0 +1,887 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Learn Python — Interactive Lessons</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="A mini interactive website to learn Python with lessons, practice, and quizzes." />
+    <style>
+        :root{
+            --bg-start: #0f172a;
+            --bg-end:   #0b1020;
+            --glass: rgba(255,255,255,0.08);
+            --glass-2: rgba(255,255,255,0.12);
+            --border: rgba(255,255,255,0.16);
+            --text: #ffffff;
+            --muted: #d7e3ffcc;
+            --code-bg: rgba(7, 11, 22, 0.75);
+            --shadow: 0 12px 40px rgba(0,0,0,0.5);
+
+            --accent-green-1: #34d399;
+            --accent-green-2: #22c55e;
+            --accent-purple-1: #7c3aed;
+            --accent-purple-2: #a78bfa;
+            --accent-yellow-1: #f59e0b;
+            --accent-cyan-1: #22d3ee;
+
+            --radius-xl: 22px;
+            --radius-md: 14px;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background:
+                    radial-gradient(1200px 800px at 20% 0%, #1f2942 0%, transparent 60%),
+                    radial-gradient(1000px 700px at 80% 20%, #13223b 0%, transparent 60%),
+                    linear-gradient(120deg, var(--bg-start), var(--bg-end));
+            color: var(--text);
+            min-height: 100vh;
+            display: grid;
+            grid-template-rows: auto 1fr;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            backdrop-filter: blur(12px);
+            background: linear-gradient(180deg, rgba(10,14,26,0.7), rgba(10,14,26,0.2));
+            border-bottom: 1px solid var(--border);
+        }
+
+        .sparkle {
+            font-size: 22px;
+            filter: drop-shadow(0 0 6px rgba(255,255,255,0.25));
+            opacity: 0.8;
+        }
+
+        header h1 {
+            margin: 0;
+            text-align: center;
+            letter-spacing: 0.3px;
+            font-weight: 800;
+            font-size: 26px;
+            background: linear-gradient(270deg, #fff, #ffe9b0, #c7f9ff, #e0d7ff, #ffffff);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 16s ease infinite;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            justify-self: end;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            font-size: 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            color: var(--muted);
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(8px);
+        }
+
+        .status { font-size: 13px; color: var(--muted); }
+
+        .icon-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 999px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            cursor: pointer;
+            transition: transform .2s, box-shadow .2s, background .2s;
+            box-shadow: 0 8px 22px rgba(0,0,0,0.35);
+        }
+
+        .icon-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.45);
+            background: var(--glass-2);
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        .wrap {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 18px;
+            padding: 18px;
+            max-width: 1400px;
+            width: 100%;
+            margin: 0 auto;
+            transition: grid-template-columns .28s ease;
+        }
+
+        body.nav-hidden .wrap {
+            grid-template-columns: 0 1fr;
+        }
+
+        nav {
+            transition: width .28s ease, margin .28s ease, padding .28s ease;
+            width: 100%;
+            backdrop-filter: blur(14px);
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            padding: 16px 0;
+            max-height: calc(100vh - 120px);
+            overflow: auto;
+        }
+
+        body.nav-hidden nav {
+            width: 0;
+            padding: 0;
+            border-width: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .nav-title {
+            padding: 10px 18px;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .lesson-link {
+            display: block;
+            padding: 12px 16px;
+            margin: 6px 10px;
+            border-radius: 14px;
+            color: var(--text);
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.04);
+            transition: transform .2s, background .2s, border-color .2s;
+            text-decoration: none;
+        }
+
+        .lesson-link:hover { transform: translateY(-2px); background: var(--glass-2); }
+
+        .lesson-link.active {
+            border-color: rgba(255,255,255,0.25);
+            background: linear-gradient(135deg, rgba(124,58,237,0.18), rgba(34,197,94,0.15));
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07);
+        }
+
+        .lesson-link small {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        main { display: grid; gap: 18px; }
+
+        .card {
+            backdrop-filter: blur(14px);
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            transition: transform .25s ease;
+            animation: fadeIn .6s ease;
+        }
+
+        .card:hover { transform: translateY(-4px); }
+
+        .card h2, .card h3 {
+            margin: 0;
+            padding: 16px 18px;
+            background: rgba(255,255,255,0.06);
+            border-bottom: 1px solid var(--border);
+            font-weight: 800;
+            letter-spacing: 0.2px;
+            color: #ffffff;
+        }
+
+        .card .content { padding: 16px 18px; }
+
+        .grid-2 { display: grid; grid-template-columns: 1fr; gap: 14px; }
+
+        @media (min-width: 980px) { .grid-2 { grid-template-columns: 1fr 1fr; } }
+
+        textarea, pre {
+            width: 100%;
+            min-height: 260px;
+            background:
+                    linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02)),
+                    var(--code-bg);
+            color: #eef4ff;
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            overflow: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+        }
+
+        textarea { height: 280px; resize: vertical; }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0 0 0;
+            align-items: center;
+        }
+
+        button {
+            display: inline-block;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: 24px;
+            border: 1px solid rgba(255,255,255,0.15);
+            cursor: pointer;
+            color: white;
+            transition: all 0.25s;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.35);
+            background: linear-gradient(135deg, #485563, #29323c);
+        }
+
+        button:hover { transform: translateY(-2px); box-shadow: 0 14px 28px rgba(0,0,0,0.45); }
+        button:disabled { opacity: 0.6; cursor: not-allowed; }
+
+        button.primary { background: linear-gradient(135deg, var(--accent-green-1), var(--accent-green-2)); color: #062a1b; border-color: transparent; }
+        button.good    { background: linear-gradient(135deg, #10b981, #34d399); color: #062a1b; border-color: transparent; }
+        button.warn    { background: linear-gradient(135deg, var(--accent-yellow-1), #fde68a); color: #2e2302; border-color: transparent; }
+        button.danger  { background: linear-gradient(135deg, var(--accent-purple-1), var(--accent-purple-2)); color: #1b0d2e; border-color: transparent; }
+
+        .hint {
+            background: rgba(34,211,238,0.08);
+            border-left: 3px solid var(--accent-cyan-1);
+            padding: 10px 12px;
+            border-radius: 10px;
+            color: #e8fbff;
+        }
+
+        .success { color: #a6ffcb; }
+        .error { color: #ff7b9a; }
+        .muted { color: var(--muted); }
+        .spacer { flex: 1; }
+
+        .footer {
+            text-align: center;
+            color: var(--muted);
+            font-size: 12px;
+            padding: 4px 0 18px 0;
+        }
+
+        @keyframes fadeIn {
+            from { opacity:0; transform:translateY(18px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        @media (max-width: 860px) {
+            body:not(.nav-hidden) .wrap { grid-template-columns: 0 1fr; }
+            nav { position: fixed; left: 12px; right: 12px; top: 74px; max-height: 70vh; z-index: 50; }
+            body.nav-hidden nav { display: none; }
+        }
+    </style>
+</head>
+<body class="nav-hidden">
+<header>
+    <button id="toggleNavBtn" class="icon-btn" aria-label="Toggle lessons sidebar" title="Toggle lessons">☰</button>
+    <h1><span class="sparkle">✧</span>       ✧ Learn Python ✧ <span class="sparkle">✧</span></h1>
+    <div class="header-right">
+        <span class="pill">Beginner</span>
+        <span class="pill">No install</span>
+        <span class="status" id="status">Loading Python…</span>
+    </div>
+</header>
+
+<div class="wrap">
+    <nav id="nav" aria-label="Lessons navigation"></nav>
+
+    <main>
+        <div class="card">
+            <h2 id="lesson-title">Lesson</h2>
+            <div class="content">
+                <div class="lesson-meta" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;">
+                    <span class="pill" id="lesson-level">Level</span>
+                    <span class="pill" id="lesson-time">~ min</span>
+                    <span class="muted" id="lesson-desc"></span>
+                    <span class="spacer"></span>
+                    <button id="prevBtn" class="danger" title="Previous lesson">◀ Prev</button>
+                    <button id="nextBtn" class="primary" title="Next lesson">Next ▶</button>
+                </div>
+
+                <div id="lesson-body" class="content"></div>
+
+                <div class="grid-2">
+                    <div>
+                        <h3><span class="sparkle">✦</span> Editor</h3>
+                        <div class="content" style="padding-top: 8px;">
+                            <textarea id="editor" spellcheck="false"></textarea>
+                            <div class="toolbar">
+                                <button class="primary" id="runBtn" disabled>Run ▶</button>
+                                <button id="clearOutBtn">Clear output</button>
+                                <button id="resetCodeBtn" class="danger">Reset code</button>
+                                <span class="muted" id="runtimeNote">Use print() to display results below.</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3><span class="sparkle">✦</span> Output</h3>
+                        <div class="content" style="padding-top: 8px;">
+                            <pre id="output" aria-live="polite"></pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin:16px 0 0 0;">
+                    <h2 style="padding:14px 18px; border-bottom:1px solid var(--border); margin:0;">Practice challenge</h2>
+                    <div class="content" id="challenge"></div>
+                    <div class="toolbar" style="padding: 0 16px 16px 16px;">
+                        <button class="good" id="checkBtn" disabled>Check solution ✅</button>
+                        <button class="warn" id="showHintBtn">Hint</button>
+                        <button class="danger" id="showAnswerBtn">Show answer</button>
+                        <span class="muted" id="checkMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2><span class="sparkle">✧</span> Mini quiz</h2>
+            <div class="content" id="quiz"></div>
+        </div>
+
+        <div class="footer">
+            Keep going. Skill grows where curiosity meets repetition.
+        </div>
+    </main>
+</div>
+
+<script type="module">
+    // ----- Lessons content -----
+    const lessons = [
+        {
+            id: "intro",
+            title: "Hello, Python",
+            level: "Beginner",
+            time: "~5 min",
+            desc: "Your first program and using print().",
+            body: `
+<p>Python runs top-to-bottom. The simplest useful thing is to print text.</p>
+<div class="hint">Tip: Strings use quotes. Single or double both work.</div>
+<pre>print("Hello, world!")
+print('Welcome to Python')</pre>`,
+            starter: `# Your first Python program
+print("Hello, world!")
+# Try printing your name:
+print("I am learning Python!")`,
+            challenge: {
+                text: "Print two lines: your name and your favorite food.",
+                hint: "Use two print() calls, one per line.",
+                answer: `print("Ayaan")
+print("Biryani")`,
+                check: async (pyodide) => {
+                    const out = captureOutput(await pyodide.runPythonAsync(`
+import sys, io
+_buf = io.StringIO()
+_save_out, _save_err = sys.stdout, sys.stderr
+sys.stdout = _buf
+try:
+    # --- user code ---
+${getEditorCode()}
+    # ---------------
+finally:
+    sys.stdout = _save_out
+_buf.getvalue()
+`));
+                    const lines = out.trim().split(/\\r?\\n/).filter(Boolean);
+                    if (lines.length < 2) return { ok: false, msg: "I expected two printed lines." };
+                    return { ok: true, msg: "Nice! Printing text is your new superpower." };
+                }
+            },
+            quiz: [
+                {
+                    q: "What does print() do?",
+                    options: ["Stops the program", "Shows text in the console", "Saves a file", "Asks for input"],
+                    correct: 1,
+                    exp: "print() sends text to standard output (your Output panel)."
+                }
+            ]
+        },
+        {
+            id: "vars",
+            title: "Variables and types",
+            level: "Beginner",
+            time: "~7 min",
+            desc: "Store data and do simple math.",
+            body: `
+<p>Variables are names for values. No declarations needed.</p>
+<pre>x = 3
+y = 4
+sum_xy = x + y
+print(sum_xy)  # 7
+
+greeting = "hi"
+print(type(greeting))</pre>`,
+            starter: `# Make variables and print results
+x = 8
+y = 2
+print("x + y =", x + y)
+name = "Ayaan"
+print("Hello,", name)`,
+            challenge: {
+                text: "Create variables: apples=5 and oranges=3, then print the total.",
+                hint: "Add them with + and print the result.",
+                answer: `apples = 5
+oranges = 3
+print(apples + oranges)`,
+                check: async (pyodide) => {
+                    const out = captureOutput(await pyodide.runPythonAsync(inWrap(getEditorCode())));
+                    const num = parseInt(out.trim().split(/\\s+/).pop(), 10);
+                    if (Number.isNaN(num)) return { ok: false, msg: "Print a number result." };
+                    if (num !== 8) return { ok: false, msg: "It should print 8." };
+                    return { ok: true, msg: "Correct! Variables hold values you can combine." };
+                }
+            },
+            quiz: [
+                {
+                    q: "Which is a valid variable name?",
+                    options: ["2cool", "cool_name", "cool-name", "cool name"],
+                    correct: 1,
+                    exp: "Use letters, numbers, and underscores; cannot start with a number."
+                }
+            ]
+        },
+        {
+            id: "strings",
+            title: "Working with strings",
+            level: "Beginner",
+            time: "~7 min",
+            desc: "Concatenation and f-strings.",
+            body: `
+<p>Combine strings with + or use f-strings for readable formatting.</p>
+<pre>first = "Ada"
+last = "Lovelace"
+print(first + " " + last)
+print(f"{first} {last}")</pre>`,
+            starter: `first = "Ada"
+last = "Lovelace"
+message = f"Hello, {first} {last}!"
+print(message)`,
+            challenge: {
+                text: "Make name='Ayaan' and print: Hello, Ayaan!",
+                hint: "Use an f-string: f\"Hello, {name}!\"",
+                answer: `name = "Ayaan"
+print(f"Hello, {name}!")`,
+                check: async (pyodide) => {
+                    const out = captureOutput(await pyodide.runPythonAsync(inWrap(getEditorCode())));
+                    return /Hello,\\s*Ayaan!/.test(out)
+                        ? { ok: true, msg: "Great! f-strings are clean and powerful." }
+                        : { ok: false, msg: "I expected: Hello, Ayaan!" };
+                }
+            },
+            quiz: [
+                {
+                    q: "What prints the value of x inside a sentence?",
+                    options: ["\"x\"", "\"{x}\"", "f\"{x}\"", "print(x) inside quotes"],
+                    correct: 2,
+                    exp: "Prefix with f to evaluate expressions inside braces."
+                }
+            ]
+        },
+        {
+            id: "lists",
+            title: "Lists",
+            level: "Beginner",
+            time: "~8 min",
+            desc: "Collections of items you can index and loop over.",
+            body: `
+<p>Lists hold ordered items.</p>
+<pre>nums = [10, 20, 30]
+print(nums[0])       # 10
+nums.append(40)
+for n in nums:
+    print(n)</pre>`,
+            starter: `pets = ["cat", "dog", "parrot"]
+pets.append("turtle")
+print(len(pets))
+for p in pets:
+    print(p)`,
+            challenge: {
+                text: "Create a list [1,2,3], append 4, then print the last item.",
+                hint: "Use .append() and index -1.",
+                answer: `nums = [1,2,3]
+nums.append(4)
+print(nums[-1])`,
+                check: async (pyodide) => {
+                    const out = captureOutput(await pyodide.runPythonAsync(inWrap(getEditorCode())));
+                    return out.trim().split(/\\s+/).pop() === "4"
+                        ? { ok: true, msg: "Spot on. Index -1 gets the last item." }
+                        : { ok: false, msg: "I expected the last printed value to be 4." };
+                }
+            },
+            quiz: [
+                {
+                    q: "What does nums.append(5) do?",
+                    options: ["Adds 5 to each element", "Replaces the last item with 5", "Adds 5 to the end", "Creates a new list"],
+                    correct: 2,
+                    exp: "append adds a single item to the end of the existing list."
+                }
+            ]
+        },
+        {
+            id: "flow",
+            title: "If and loops",
+            level: "Beginner",
+            time: "~10 min",
+            desc: "Decision-making and repetition.",
+            body: `
+<p>Use if/elif/else for branching and for/while for repetition.</p>
+<pre>age = 18
+if age >= 18:
+    print("adult")
+else:
+    print("minor")
+
+for i in range(3):
+    print("loop", i)</pre>`,
+            starter: `for i in range(5):
+    if i % 2 == 0:
+        print(i, "is even")
+    else:
+        print(i, "is odd")`,
+            challenge: {
+                text: "Print numbers 1..5, but only the even ones.",
+                hint: "Use range(1,6) and i % 2 == 0 inside an if.",
+                answer: `for i in range(1,6):
+    if i % 2 == 0:
+        print(i)`,
+                check: async (pyodide) => {
+                    const out = captureOutput(await pyodide.runPythonAsync(inWrap(getEditorCode())));
+                    const lines = out.trim().split(/\\r?\\n/).filter(Boolean);
+                    const expected = ["2", "4"];
+                    return JSON.stringify(lines) === JSON.stringify(expected)
+                        ? { ok: true, msg: "Nice filtering with a conditional!" }
+                        : { ok: false, msg: "Expected lines: 2 and 4 (one per line)." };
+                }
+            },
+            quiz: [
+                {
+                    q: "range(1,4) generates:",
+                    options: ["1,2,3,4", "1,2,3", "0,1,2,3", "2,3,4"],
+                    correct: 1,
+                    exp: "Stop is exclusive, so 1,2,3."
+                }
+            ]
+        },
+        {
+            id: "funcs",
+            title: "Functions",
+            level: "Beginner",
+            time: "~8 min",
+            desc: "Group logic and reuse it.",
+            body: `
+<p>Define functions with def, and return a value.</p>
+<pre>def add(a, b):
+    return a + b
+
+print(add(2, 3))  # 5</pre>`,
+            starter: `def greet(name):
+    return f"Hello, {name}!"
+
+print(greet("Ayaan"))`,
+            challenge: {
+                text: "Write a function double(n) that returns n*2. Call it for 7 and print the result.",
+                hint: "Use return inside the function and print its output.",
+                answer: `def double(n):
+    return n*2
+print(double(7))`,
+                check: async (pyodide) => {
+                    const out = captureOutput(await pyodide.runPythonAsync(inWrap(getEditorCode())));
+                    return out.trim().split(/\\s+/).pop() === "14"
+                        ? { ok: true, msg: "Functions for the win!" }
+                        : { ok: false, msg: "I expected to see 14 printed." };
+                }
+            },
+            quiz: [
+                {
+                    q: "Where does a function send its result?",
+                    options: ["To print()", "To return value", "To a global variable", "To the next function"],
+                    correct: 1,
+                    exp: "Functions produce a return value; printing is separate."
+                }
+            ]
+        }
+    ];
+
+    const quizzes = [
+        { id: "q1", q: "Which line is a comment in Python?", options: ["// comment", "# comment", "/* comment */", "-- comment"], correct: 1, exp: "Python uses # for comments." },
+        { id: "q2", q: "What is the type of 3.0?", options: ["int", "float", "str", "bool"], correct: 1, exp: "Numbers with a decimal point are floats." },
+        { id: "q3", q: "len([1,2,3]) returns:", options: ["2", "3", "4", "Error"], correct: 1, exp: "There are three items in the list." }
+    ];
+
+    // ----- UI refs -----
+    const nav = document.getElementById("nav");
+    const lessonTitle = document.getElementById("lesson-title");
+    const lessonLevel = document.getElementById("lesson-level");
+    const lessonTime = document.getElementById("lesson-time");
+    const lessonDesc = document.getElementById("lesson-desc");
+    const lessonBody = document.getElementById("lesson-body");
+    const editor = document.getElementById("editor");
+    const output = document.getElementById("output");
+    const statusEl = document.getElementById("status");
+    const runBtn = document.getElementById("runBtn");
+    const clearOutBtn = document.getElementById("clearOutBtn");
+    const resetCodeBtn = document.getElementById("resetCodeBtn");
+    const checkBtn = document.getElementById("checkBtn");
+    const showHintBtn = document.getElementById("showHintBtn");
+    const showAnswerBtn = document.getElementById("showAnswerBtn");
+    const checkMessage = document.getElementById("checkMessage");
+    const challengeBox = document.getElementById("challenge");
+    const prevBtn = document.getElementById("prevBtn");
+    const nextBtn = document.getElementById("nextBtn");
+    const quizBox = document.getElementById("quiz");
+    const toggleNavBtn = document.getElementById("toggleNavBtn");
+
+    let current = 0;
+    let pyodide = null;
+    let starterCache = {};
+    window.__EDITOR_CODE__ = "";
+
+    // ----- Sidebar -----
+    function renderNav() {
+        nav.innerHTML = '<div class="nav-title">Lessons</div>' +
+            lessons.map((l, i) => (
+                `<a href="#${l.id}" class="lesson-link" data-i="${i}">
+            ${i + 1}. ${l.title}
+            <small>${l.desc}</small>
+          </a>`
+            )).join("");
+        nav.querySelectorAll(".lesson-link").forEach(a => {
+            a.addEventListener("click", (e) => {
+                e.preventDefault();
+                const i = parseInt(a.dataset.i, 10);
+                loadLesson(i);
+                document.querySelectorAll(".lesson-link").forEach(n => n.classList.remove("active"));
+                a.classList.add("active");
+                history.replaceState(null, "", "#" + lessons[i].id);
+                if (window.matchMedia("(max-width: 860px)").matches) {
+                    document.body.classList.add("nav-hidden");
+                }
+            });
+        });
+    }
+
+    toggleNavBtn.addEventListener("click", () => {
+        document.body.classList.toggle("nav-hidden");
+    });
+
+    // ----- Quiz -----
+    function renderQuiz() {
+        quizBox.innerHTML = quizzes.map((q, qi) => `
+        <div class="card" style="margin:8px 0;">
+          <div class="content">
+            <div><strong>Q${qi + 1}:</strong> ${q.q}</div>
+            <div style="margin-top:8px; display:grid; gap:6px;">
+              ${q.options.map((opt, oi) => `
+                <label style="display:flex; gap:8px; align-items:center;">
+                  <input type="radio" name="quiz-${q.id}" value="${oi}">
+                  <span>${opt}</span>
+                </label>
+              `).join("")}
+            </div>
+            <div class="toolbar" style="margin-top:8px;">
+              <button class="good" data-check="${q.id}">Check</button>
+              <span class="muted" id="exp-${q.id}"></span>
+            </div>
+          </div>
+        </div>
+      `).join("");
+        quizBox.querySelectorAll("button[data-check]").forEach(btn => {
+            btn.addEventListener("click", () => {
+                const id = btn.dataset.check;
+                const q = quizzes.find(x => x.id === id);
+                const sel = quizBox.querySelector(`input[name="quiz-${id}"]:checked`);
+                const expEl = document.getElementById(`exp-${id}`);
+                if (!sel) { expEl.textContent = "Choose an option."; return; }
+                const choice = parseInt(sel.value, 10);
+                if (choice === q.correct) {
+                    expEl.innerHTML = `<span class="success">Correct.</span> ${q.exp}`;
+                } else {
+                    expEl.innerHTML = `<span class="error">Not quite.</span> ${q.exp}`;
+                }
+            });
+        });
+    }
+
+    // ----- Lessons -----
+    function loadLesson(i) {
+        current = i;
+        const l = lessons[i];
+        lessonTitle.textContent = `${i + 1}. ${l.title}`;
+        lessonLevel.textContent = l.level;
+        lessonTime.textContent = l.time;
+        lessonDesc.textContent = l.desc;
+        lessonBody.innerHTML = l.body;
+        challengeBox.innerHTML = `<p>${l.challenge.text}</p>`;
+        editor.value = starterCache[l.id] ?? l.starter;
+        window.__EDITOR_CODE__ = editor.value;
+        output.textContent = "";
+        checkMessage.textContent = "";
+        prevBtn.disabled = (i === 0);
+        nextBtn.disabled = (i === lessons.length - 1);
+        document.querySelectorAll(".lesson-link").forEach((n, idx) => {
+            n.classList.toggle("active", idx === i);
+        });
+        checkBtn.disabled = !pyodide;
+    }
+
+    prevBtn.addEventListener("click", () => { if (current > 0) loadLesson(current - 1); });
+    nextBtn.addEventListener("click", () => { if (current < lessons.length - 1) loadLesson(current + 1); });
+
+    // Editor
+    editor.addEventListener("input", () => {
+        window.__EDITOR_CODE__ = editor.value;
+        starterCache[lessons[current].id] = editor.value;
+    });
+
+    // Output helpers
+    function write(text) {
+        output.textContent += text;
+        output.scrollTop = output.scrollHeight;
+    }
+
+    function writeln(text = "") { write(text + "\\n"); }
+
+    function captureOutput(text) { return String(text ?? ""); }
+
+    function inWrap(user) {
+        return `
+import sys, io
+_buf = io.StringIO()
+_save_out, _save_err = sys.stdout, sys.stderr
+sys.stdout = _buf
+try:
+${indent(user, 4)}
+finally:
+    sys.stdout = _save_out
+_buf.getvalue()
+`;
+    }
+
+    function indent(s, n) {
+        return s.split("\\n").map(line => " ".repeat(n) + line).join("\\n");
+    }
+
+    function getEditorCode() { return window.__EDITOR_CODE__ || ""; }
+
+    // Buttons
+    clearOutBtn.addEventListener("click", () => { output.textContent = ""; });
+
+    resetCodeBtn.addEventListener("click", () => {
+        const l = lessons[current];
+        editor.value = l.starter;
+        window.__EDITOR_CODE__ = l.starter;
+        starterCache[l.id] = l.starter;
+    });
+
+    // Python runtime
+    (async () => {
+        try {
+            const url = "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js";
+            const { loadPyodide } = await import(url);
+            pyodide = await loadPyodide({ indexURL: "https://cdn.jsdelivr.net/pyodide/v0.24.1/full/" });
+            pyodide.setStdout({ batched: (s) => write(s) });
+            pyodide.setStderr({ batched: (s) => write(s) });
+            statusEl.textContent = "Python ready";
+            runBtn.disabled = false;
+            checkBtn.disabled = false;
+        } catch (e) {
+            statusEl.textContent = "Failed to load Python";
+            writeln("Runtime error: " + e);
+        }
+    })();
+
+    runBtn.addEventListener("click", async () => {
+        if (!pyodide) { writeln("Python not ready."); return; }
+        runBtn.disabled = true;
+        statusEl.textContent = "Running…";
+        try {
+            await pyodide.runPythonAsync(editor.value);
+        } catch (e) {
+            writeln(String(e));
+        } finally {
+            statusEl.textContent = "Python ready";
+            runBtn.disabled = false;
+        }
+    });
+
+    // Challenge checking
+    showHintBtn.addEventListener("click", () => {
+        const hint = lessons[current].challenge.hint;
+        checkMessage.innerHTML = `<span class="muted">Hint:</span> ${hint}`;
+    });
+
+    showAnswerBtn.addEventListener("click", () => {
+        const ans = lessons[current].challenge.answer;
+        checkMessage.innerHTML = `<span class="muted">Answer:</span>\n<pre>${ans.replace(/</g, "&lt;")}</pre>`;
+    });
+
+    checkBtn.addEventListener("click", async () => {
+        checkMessage.textContent = "Checking…";
+        try {
+            const result = await lessons[current].challenge.check(pyodide);
+            checkMessage.innerHTML = result.ok
+                ? `<span class="success">✔ ${result.msg}</span>`
+                : `<span class="error">✖ ${result.msg}</span>`;
+        } catch (e) {
+            checkMessage.innerHTML = `<span class="error">Checker error:</span> ${String(e)}`;
+        }
+    });
+
+    // Init
+    function initActive(i) {
+        const links = Array.from(document.querySelectorAll(".lesson-link"));
+        links.forEach(n => n.classList.remove("active"));
+        if (links[i]) links[i].classList.add("active");
+    }
+
+    function startIndexFromHash() {
+        const hash = location.hash.replace(/^#/, "");
+        const idx = lessons.findIndex(l => l.id === hash);
+        return idx === -1 ? 0 : Math.max(0, idx);
+    }
+
+    renderNav();
+    renderQuiz();
+    const startIndex = startIndexFromHash();
+    loadLesson(startIndex);
+    initActive(startIndex);
+</script>
+</body>
+</html>

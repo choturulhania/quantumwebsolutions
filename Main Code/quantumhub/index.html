@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Gaming</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        header h1 {
+            font-size: 3em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        @keyframes gradientShift {
+            0% { background-position: 0% 50% }
+            50% { background-position: 100% 50% }
+            100% { background-position: 0% 50% }
+        }
+
+        .game-grid {
+            display: grid;
+            /* Default: multi-column layout with a minimum width of 250px per card */
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            width: 90%;
+            max-width: 1200px;
+            margin-bottom: 50px;
+        }
+
+        .card {
+            backdrop-filter: blur(12px);
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            padding: 30px 20px;
+            text-align: center;
+            animation: fadeIn 0.6s ease;
+            transition: transform 0.3s, box-shadow 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .card:hover {
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.6), 0 0 20px rgba(66, 255, 190, 0.15);
+        }
+
+        .card i {
+            font-size: 2.5em;
+            background: linear-gradient(270deg, #43e97b, #38f9d7);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 10s ease infinite;
+        }
+
+        .card h2 {
+            font-size: 1.6rem;
+            margin: 0;
+            background: linear-gradient(270deg, #ff7e5f, #feb47b);
+            background-size: 400% 400%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 8s ease infinite;
+        }
+
+        .card p {
+            font-size: 0.95em;
+            color: rgba(255,255,255,0.75);
+            line-height: 1.4;
+        }
+
+        .play-btn {
+            display: inline-block;
+            padding: 12px 24px;
+            margin-top: 10px;
+            font-size: 1em;
+            font-weight: 500;
+            border-radius: 25px;
+            border: none;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+            color: white;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+        }
+
+        .play-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Mobile/Phone View Optimization --- */
+        @media (max-width: 600px) {
+            body {
+                padding: 10px; /* Reduce overall padding */
+            }
+
+            header h1 {
+                font-size: 2em; /* Smaller header on tiny screens */
+                margin-top: 20px;
+                margin-bottom: 10px;
+            }
+
+            .game-grid {
+                /* Force a single column for the cards on small screens */
+                grid-template-columns: 1fr;
+                gap: 15px; /* Slightly less gap on mobile */
+                width: 100%; /* Ensure it uses full width of the reduced body padding */
+            }
+
+            .card {
+                padding: 20px 15px; /* Reduce card padding */
+            }
+        }
+
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Quantum Gaming</h1>
+</header>
+
+<div class="game-grid">
+    <div class="card">
+        <i class="fas fa-times-circle"></i>
+        <h2>Tic Tac Toe</h2>
+        <p>A timeless two-player strategy game. Outsmart your opponent with X’s and O’s.</p>
+        <a href="../quantumhub/ttt.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-apple-alt"></i>
+        <h2>Snake</h2>
+        <p>Classic arcade fun. Eat the apples, grow your snake, and avoid crashing!</p>
+        <a href="../quantumhub/snake.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-table-tennis-paddle-ball"></i>
+        <h2>Pong</h2>
+        <p>The original arcade duel! Defend your side and challenge the paddle AI.</p>
+        <a href="../quantumhub/pong.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-dice"></i>
+        <h2>Ludo</h2>
+        <p>A family board game favorite. Race your tokens to the finish before your friends!</p>
+        <a href="../quantumhub/ludo.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-user-secret"></i>
+        <h2>Mafia Party Game</h2>
+        <p>A social deduction game against 5 bots. Survive the nights and vote smart in the day!</p>
+        <a href="../quantumchat/courses/gamehub/mafia.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-chess-knight"></i>
+        <h2>Chess</h2>
+        <p>Classic strategy game with elegant design. Play White against the bot.</p>
+        <a href="../quantumchat/courses/gamehub/chess.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-landmark"></i>
+        <h2>Monopoly GO!</h2>
+        <p>Buy properties, collect rent, and compete with up to 4 players. Bankrupt your opponents!</p>
+        <a href="../quantumchat/courses/gamehub/monopoly.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-dna"></i>
+        <h2>Twisted Serpents</h2>
+        <p>Competitive Snake with powerups, curved arenas, and evolving AI. Dominate the field!</p>
+        <a href="../quantumchat/courses/gamehub/snakeio.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-th-large"></i>
+        <h2>Tetris Twist</h2>
+        <p>Classic block stacking with rotating gravity and dynamic speed twists. Can you keep up?</p>
+        <a href="../quantumchat/courses/gamehub/tetris.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-lightbulb"></i>
+        <h2>Simon — Classic Memory</h2>
+        <p>Follow the color sequence in this classic memory game. Test your recall and rhythm!</p>
+        <a href="../quantumchat/courses/gamehub/simon.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-laptop-code"></i>
+        <h2>CSS Website Playground</h2>
+        <p>HTML, CSS, and JS in one place — now with retro & neon modes. Experiment freely!</p>
+        <a href="../quantumchat/courses/gamehub/codegame.html" class="play-btn">Play</a>
+    </div>
+
+    <div class="card">
+        <i class="fas fa-spade"></i>
+        <h2>Quantum Poker</h2>
+        <p>Texas Hold’em poker with a smart AI opponent. Bet, fold, and go all in!</p>
+        <a href="../quantumchat/courses/gamehub/poker.html" class="play-btn">Play</a>
+    </div>
+</div>
+
+</body>
+</html>

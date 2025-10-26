@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Mafia Party Game — Light/Dark Toggle (knob adjusted)</title>
+    <style>
+        :root{
+            /* Shared variables (colors for both themes are defined later in .dark / .light blocks) */
+            --radius: 20px;
+            --muted-dark: rgba(255,255,255,0.75);
+            --muted-light: #6e6e73;
+            --card-radius: 20px;
+        }
+
+        /* Default to dark theme variables; JavaScript will toggle .light on body to switch */
+        body {
+            margin: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            /* dark background gradient */
+            background: linear-gradient(120deg, #141e30, #243b55);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Light theme overrides when .light class is on body */
+        body.light {
+            background: #ffffff;
+            color: #1d1d1f;
+        }
+
+        header h1 {
+            font-size: 3em;
+            background: linear-gradient(270deg, #ff4e50, #f9d423, #1fa2ff, #12d8fa, #a6ffcb);
+            background-size: 800% 800%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: gradientShift 12s ease infinite;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        @keyframes gradientShift {
+            0%{background-position:0% 50%}
+            50%{background-position:100% 50%}
+            100%{background-position:0% 50%}
+        }
+
+        .game-card {
+            backdrop-filter: blur(12px);
+            /* dark default card translucent */
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+            padding: 20px;
+            width: 90%;
+            max-width: 800px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* light theme card tweak */
+        body.light .game-card {
+            background: rgba(255,255,255,0.85);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+        }
+
+        #phaseIndicator {
+            font-size: 1.5em;
+            cursor: pointer;
+            margin-bottom: 15px;
+            padding: 10px 20px;
+            border-radius: 15px;
+            background: linear-gradient(135deg, #ff7e5f, #feb47b);
+            transition: transform 0.2s;
+            display: inline-block;
+            color: inherit;
+        }
+        #phaseIndicator:hover { transform: scale(1.05); }
+
+        .log {
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(255,255,255,0.06);
+            border-radius: 10px;
+            padding: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9em;
+            color: inherit;
+        }
+        /* light mode log background */
+        body.light .log {
+            background: rgba(0,0,0,0.03);
+            color: #1d1d1f;
+        }
+
+        .players {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+
+        .player {
+            margin: 5px 10px;
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.08);
+            color: inherit;
+        }
+        body.light .player {
+            background: rgba(0,0,0,0.04);
+            color: #1d1d1f;
+        }
+
+        .dead {
+            text-decoration: line-through;
+            opacity: 0.5;
+        }
+
+        .actions {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        /* Buttons shared styling */
+        button {
+            border: none;
+            border-radius: 25px;
+            padding: 12px 20px;
+            font-size: 1em;
+            cursor: pointer;
+            background: linear-gradient(135deg, #43e97b, #38f9d7);
+            color: #fff;
+            transition: all 0.3s;
+        }
+        /* lighter hover shadows in light theme */
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+        body.light button:hover {
+            box-shadow: 0 5px 15px rgba(0,0,0,0.12);
+        }
+
+        #newGameBtn, #playAgainBtn {
+            margin-top: 15px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: inline-block;
+        }
+
+        /* make sure the composer and messages area look correct in both themes */
+        .msg {
+            margin-bottom:12px; max-width:70%; padding:12px 16px;
+            border-radius:16px; line-height:1.4;
+            box-shadow:0 4px 12px rgba(0,0,0,0.05);
+            position:relative;
+        }
+        .msg.self{ background:#007aff; color:white; margin-left:auto; }
+        .msg.other{ background: rgba(255,255,255,0.06); color:inherit; }
+        body.light .msg.other { background: var(--card); color: #1d1d1f; }
+
+        #composer{
+            display:flex; padding:12px 16px;
+            border-top:1px solid rgba(0,0,0,0.08);
+            background: rgba(255,255,255,0.06);
+            backdrop-filter: blur(12px);
+            width: calc(100% - 40px);
+            max-width: 760px;
+            border-radius: 12px;
+            margin-top: 8px;
+        }
+        body.light #composer{
+            background: rgba(255,255,255,0.6);
+        }
+
+        #composer input{
+            flex:1; padding:12px; border:1px solid rgba(0,0,0,0.12);
+            border-radius:14px; outline:none;
+            background: transparent;
+            color: inherit;
+        }
+        /* composer send button uses animated gradient background (keeps same) */
+        #composer button{
+            margin-left:10px; padding:12px 20px; border:none; border-radius:14px;
+            background: linear-gradient(270deg,#34c759,#007aff,#ff2d55);
+            background-size: 500% 500%;
+            animation: gradientShift 9s ease infinite;
+            color:#fff; font-weight:600; cursor:pointer; transition:0.18s;
+        }
+        #composer button:hover{ opacity:0.95; }
+
+        /* dialogs (kept Apple look) */
+        dialog{
+            border:none; border-radius:var(--radius); padding:20px; width:360px;
+            box-shadow:0 10px 40px rgba(0,0,0,0.18);
+        }
+        dialog::backdrop{ background:rgba(0,0,0,0.35); }
+        dialog label{ display:block; margin-bottom:6px; color:var(--muted-light); font-size:13px; }
+        dialog input{ width:100%; padding:10px; margin:10px 0 16px; border-radius:12px; border:1px solid #ddd; }
+        dialog form{ display:flex; justify-content:flex-end; gap:10px; align-items:center; }
+        dialog button{ border:none; padding:8px 16px; border-radius:12px; cursor:pointer; }
+        dialog button[type="submit"]{ background:#007aff; color:white; }
+        dialog button[type="button"]{ background:#eaeaea; color:#111; }
+        #memberHint{ color:#c82333; font-size:13px; min-height:18px; }
+
+        /* ===== Pop-in animation for elements when they appear ===== */
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: translateY(14px) scale(0.98);
+                filter: blur(2px);
+            }
+            60% {
+                opacity: 1;
+                transform: translateY(-6px) scale(1.02);
+                filter: blur(0);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: none;
+            }
+        }
+        .enter-pop {
+            animation: popIn 420ms cubic-bezier(.22,.9,.3,1) both;
+        }
+
+        /* slight focus ring for keyboard users */
+        button:focus, #phaseIndicator:focus {
+            outline: none;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.28), 0 0 0 4px rgba(100,150,255,0.12);
+        }
+        body.light button:focus, body.light #phaseIndicator:focus {
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08), 0 0 0 4px rgba(100,150,255,0.08);
+        }
+
+        /* --- Theme toggle switch (bottom center) --- */
+        .theme-toggle {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 18px;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .toggle-pill {
+            width: 120px;
+            height: 54px;
+            border-radius: 34px;
+            background: rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            gap: 8px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            transition: background 300ms ease, box-shadow 300ms ease;
+            cursor: pointer;
+        }
+        /* light pill style */
+        body.light .toggle-pill {
+            background: rgba(0,0,0,0.06);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06);
+        }
+        .pill-icon {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: white;
+            font-size: 18px;
+        }
+        .pill-icon.sun { background: #2b6cb0; } /* blue sun background */
+        .pill-icon.moon { background: #2b6cb0; opacity: 0.15; color: #2b6cb0; } /* subtle moon icon look */
+        body.light .pill-icon.sun { background: #ffd54f; color: #1d1d1d; }
+        body.light .pill-icon.moon { background: #2b6cb0; opacity: 0.15; color: #2b6cb0; }
+
+        .toggle-knob {
+            width: 44px;
+            height: 44px;
+            background: #2b3a67;
+            border-radius: 50%;
+            position: relative;
+            transition: transform 280ms cubic-bezier(.2,.9,.3,1), background 280ms ease;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        }
+        /* moved from 60px to 46px so knob doesn't reach edge — sits slightly left of moon */
+        body.light .toggle-knob {
+            background: #2b3a67;
+            transform: translateX(46px);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+        }
+        /* adjust sizing for small screens */
+        @media (max-width:420px){
+            .toggle-pill { width: 108px; height: 48px; }
+            .toggle-knob { width: 40px; height: 40px; transform: none; }
+            /* moved from 54px to 42px on small screens */
+            body.light .toggle-knob { transform: translateX(42px); }
+        }
+    </style>
+</head>
+<body class="dark">
+<header>
+    <h1>✧ Mafia Party Game ✧</h1>
+</header>
+
+<div class="game-card" role="region" aria-label="Game area">
+    <div id="phaseIndicator" tabindex="0">Click "Start New Game" to begin</div>
+    <div class="log" id="log" aria-live="polite"></div>
+    <div class="players" id="players" aria-hidden="false"></div>
+    <div class="actions" id="actions" aria-hidden="false"></div>
+    <button id="newGameBtn" aria-label="Start New Game">Start New Game</button>
+    <button id="playAgainBtn" style="display:none;" aria-label="Play Again">Play Again</button>
+</div>
+
+<!-- Theme toggle (bottom center) -->
+<div class="theme-toggle" aria-hidden="false">
+    <div class="toggle-pill" id="themePill" role="switch" aria-checked="false" tabindex="0" aria-label="Toggle light and dark mode">
+        <div class="pill-icon sun" aria-hidden="true">☀️</div>
+        <div class="toggle-knob" id="toggleKnob" aria-hidden="true"></div>
+        <div class="pill-icon moon" aria-hidden="true">🌙</div>
+    </div>
+</div>
+
+<script>
+    /* ======= small helpers & DOM refs ======= */
+    const el = id => document.getElementById(id);
+    const logEl = el("log");
+    const playersEl = el("players");
+    const actionsEl = el("actions");
+    const phaseIndicator = el("phaseIndicator");
+    const newGameBtn = el("newGameBtn");
+    const playAgainBtn = el("playAgainBtn");
+    const themePill = document.getElementById('themePill');
+    const toggleKnob = document.getElementById('toggleKnob');
+
+    /* ======= store & current user ======= */
+    let players = [];
+    let mafiaIndex = -1;
+    let phase = "idle"; // "night" or "day"
+    let humanIndex = 0;
+    let alive;
+    let gameActive = false;
+
+    /* ======= theme handling (dark <-> light) ======= */
+    function setLightMode(on){
+        if(on){
+            document.body.classList.add('light');
+            document.body.classList.remove('dark');
+            themePill.setAttribute('aria-checked', 'true');
+            // move knob to right — updated to 46px to keep knob inside pill
+            toggleKnob.style.transform = 'translateX(46px)';
+            themePill.setAttribute('title','Light mode');
+        } else {
+            document.body.classList.add('dark');
+            document.body.classList.remove('light');
+            themePill.setAttribute('aria-checked', 'false');
+            toggleKnob.style.transform = 'translateX(0px)';
+            themePill.setAttribute('title','Dark mode');
+        }
+    }
+
+    // initialize theme based on preferred scheme or last saved choice
+    const savedTheme = localStorage.getItem('mafia_theme'); // "light" or "dark"
+    if(savedTheme === 'light'){
+        setLightMode(true);
+    } else if(savedTheme === 'dark'){
+        setLightMode(false);
+    } else {
+        // default to dark theme
+        setLightMode(false);
+    }
+
+    // Toggle handler (clicking the pill)
+    themePill.addEventListener('click', ()=>{
+        const isLight = document.body.classList.contains('light');
+        setLightMode(!isLight);
+        localStorage.setItem('mafia_theme', document.body.classList.contains('light') ? 'light' : 'dark');
+        // brief pop feedback for phaseIndicator and newGameBtn so user notices theme change
+        showWithPop(phaseIndicator);
+        showWithPop(newGameBtn);
+    });
+    // keyboard accessibility
+    themePill.addEventListener('keydown', (e) => {
+        if(e.key === 'Enter' || e.key === ' '){
+            e.preventDefault();
+            themePill.click();
+        }
+    });
+
+    /* ======= game helpers and logic (kept exactly as requested) ======= */
+
+    function log(msg) {
+        logEl.innerHTML += msg + "<br>";
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function updatePlayers() {
+        playersEl.innerHTML = "";
+        players.forEach((p,i)=>{
+            const div = document.createElement("div");
+            div.className = "player" + (p.alive ? "" : " dead");
+            div.textContent = p.name + (i===humanIndex ? " (You)" : "");
+            playersEl.appendChild(div);
+        });
+    }
+
+    function startGame() {
+        gameActive = true;
+        logEl.innerHTML = "";
+        actionsEl.innerHTML = "";
+        players = [
+            {name:"You", role:"Town", alive:true},
+            {name:"Bot A", role:"Town", alive:true},
+            {name:"Bot B", role:"Town", alive:true},
+            {name:"Bot C", role:"Town", alive:true},
+            {name:"Bot D", role:"Town", alive:true},
+            {name:"Bot E", role:"Town", alive:true},
+        ];
+        alive = players.map((p,i)=>i);
+        mafiaIndex = Math.floor(Math.random()*players.length);
+        players[mafiaIndex].role="Mafia";
+        log("Game started! Roles have been assigned.");
+        updatePlayers();
+        phase = "night";
+        phaseIndicator.textContent = "Night Phase (click to proceed)";
+        // animate phaseIndicator so it "pops" when game begins
+        showWithPop(phaseIndicator);
+    }
+
+    function nextPhase() {
+        if(!gameActive) return;
+        if(phase==="night"){
+            doNight();
+        } else if(phase==="day"){
+            doDay();
+        }
+    }
+
+    function doNight() {
+        actionsEl.innerHTML = "";
+        phaseIndicator.textContent = "Resolving Night...";
+        if(players[mafiaIndex].alive){
+            if(mafiaIndex===humanIndex){
+                // human mafia chooses victim
+                log("You are Mafia. Choose a victim.");
+                alive.filter(i=>i!==mafiaIndex).forEach(i=>{
+                    const btn=document.createElement("button");
+                    btn.textContent="Kill "+players[i].name;
+                    btn.onclick=()=>{
+                        kill(i);
+                        endNight();
+                    };
+                    actionsEl.appendChild(btn);
+                });
+                return;
+            } else {
+                // mafia bot kills
+                let targets=alive.filter(i=>i!==mafiaIndex);
+                let victim=targets[Math.floor(Math.random()*targets.length)];
+                kill(victim);
+            }
+        } else {
+            log("No Mafia left to act.");
+        }
+        endNight();
+    }
+
+    function endNight(){
+        updatePlayers();
+        if(checkGameOver()) return;
+        actionsEl.innerHTML = "";
+        phase="day";
+        phaseIndicator.textContent="Day Phase (click to proceed)";
+    }
+
+    function doDay(){
+        actionsEl.innerHTML = "";
+        phaseIndicator.textContent = "Resolving Day...";
+        if(players[humanIndex].alive){
+            log("Daytime discussion. Vote to lynch a player.");
+            alive.filter(i=>i!==humanIndex).forEach(i=>{
+                const btn=document.createElement("button");
+                btn.textContent="Vote "+players[i].name;
+                btn.onclick=()=>{
+                    resolveDayVote(i);
+                };
+                actionsEl.appendChild(btn);
+            });
+        } else {
+            // all bots vote
+            resolveDayVote(botDayVote());
+        }
+    }
+
+    function botDayVote(){
+        let choices = alive;
+        return choices[Math.floor(Math.random()*choices.length)];
+    }
+
+    function resolveDayVote(humanTarget){
+        actionsEl.innerHTML="";
+        let votes={};
+        alive.forEach(i=>votes[i]=0);
+        if(players[humanIndex].alive){
+            votes[humanTarget]++;
+        }
+        alive.filter(i=>i!==humanIndex).forEach(b=>{
+            let target=alive[Math.floor(Math.random()*alive.length)];
+            votes[target]++;
+        });
+        let maxV=0, lynched=null;
+        for(const k in votes){
+            if(votes[k]>maxV){ maxV=votes[k]; lynched=parseInt(k);}
+        }
+        kill(lynched, true);
+        updatePlayers();
+        if(checkGameOver()) return;
+        phase="night";
+        phaseIndicator.textContent="Night Phase (click to proceed)";
+    }
+
+    function kill(i, day=false){
+        if(players[i].alive){
+            players[i].alive=false;
+            alive=alive.filter(x=>x!==i);
+            log(players[i].name+" was killed ("+(day?"lynched":"night")+"). They were "+players[i].role+".");
+        }
+    }
+
+    function checkGameOver(){
+        let mafiaAlive=alive.filter(i=>players[i].role==="Mafia");
+        let townAlive=alive.filter(i=>players[i].role==="Town");
+        if(mafiaAlive.length===0){
+            log("<b>Town wins!</b>");
+            endGame();
+            return true;
+        }
+        if(mafiaAlive.length>=townAlive.length){
+            log("<b>Mafia wins!</b>");
+            endGame();
+            return true;
+        }
+        return false;
+    }
+
+    function endGame(){
+        gameActive=false;
+        phase="idle";
+        phaseIndicator.textContent="Game Over";
+        // animate both phaseIndicator and playAgain button
+        showWithPop(phaseIndicator);
+        showWithPop(playAgainBtn);
+    }
+
+    /* ===== helper to show an element with a pop-in animation ===== */
+    function showWithPop(el){
+        if(!el) return;
+        // ensure it's visible, remove previous class to retrigger animation
+        el.style.display = "inline-block";
+        el.classList.remove('enter-pop');
+        // force reflow so the animation restarts
+        void el.offsetWidth;
+        el.classList.add('enter-pop');
+    }
+
+    /* ===== helper to hide an element cleanly ===== */
+    function hide(el){
+        if(!el) return;
+        el.style.display = "none";
+        el.classList.remove('enter-pop');
+    }
+
+    /* ===== Event wiring (kept exactly) ===== */
+    phaseIndicator.addEventListener("click", nextPhase);
+    newGameBtn.addEventListener("click", ()=>{
+        hide(newGameBtn);
+        hide(playAgainBtn);
+        startGame();
+    });
+    playAgainBtn.addEventListener("click", ()=>{
+        hide(playAgainBtn);
+        hide(newGameBtn);
+        startGame();
+    });
+
+    /* On initial load, animate both the phase indicator and the Start New Game button popping into view */
+    document.addEventListener('DOMContentLoaded', ()=>{
+        setTimeout(()=> {
+            showWithPop(phaseIndicator);
+            showWithPop(newGameBtn);
+        }, 180);
+    });
+
+    /* Optional: support keyboard activating phase indicator and start button (Enter) for accessibility */
+    phaseIndicator.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){ nextPhase(); }
+    });
+    newGameBtn.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){ newGameBtn.click(); }
+    });
+    playAgainBtn.addEventListener('keydown', (e)=>{
+        if(e.key === 'Enter'){ playAgainBtn.click(); }
+    });
+
+    /* End of script */
+</script>
+</body>
+</html>
